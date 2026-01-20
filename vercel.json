@@ -1,0 +1,9 @@
+{
+    "name": "smartcart-mvp",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}

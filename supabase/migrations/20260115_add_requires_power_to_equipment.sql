@@ -1,0 +1,1 @@
+ALTER TABLE equipment ADD COLUMN requires_power BOOLEAN DEFAULT FALSE;
