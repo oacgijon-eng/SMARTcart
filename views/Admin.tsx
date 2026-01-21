@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { PageHeader, Button, Card } from '../components/UI';
 import { CartView } from '../components/CartView';
 import { Item, Technique, Equipment } from '../types';
-import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, Check, Monitor, ClipboardList, Clock, Building2, Users } from 'lucide-react';
+import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search } from 'lucide-react';
 
 import { supabase } from '../services/supabase';
 import { Location } from '../hooks/useLocations';
@@ -65,10 +65,10 @@ export const AdminLogin: React.FC<{
     };
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors">
-            <Card className="w-full max-w-md p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
+        <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors pt-[calc(1rem+env(safe-area-inset-top))]">
+            <Card className="w-full max-w-sm sm:max-w-md p-6 sm:p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Acceso Supervisión</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Acceso Supervisión</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">Introduce tus credenciales</p>
                 </div>
 
@@ -171,7 +171,7 @@ const SettingsView: React.FC = () => {
                 <p className="text-slate-500 dark:text-slate-400">Configuración global del servicio SMARTcart</p>
             </div>
 
-            <Card className="p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
+            <Card className="p-4 sm:p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
                 <div className="space-y-4">
                     <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <div className="p-3 bg-clinical-100 dark:bg-clinical-900/50 rounded-xl text-clinical-600">
@@ -187,7 +187,7 @@ const SettingsView: React.FC = () => {
 
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Cambiar nombre de la unidad</label>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <input
                                 type="text"
                                 className="flex-1 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
@@ -195,7 +195,7 @@ const SettingsView: React.FC = () => {
                                 value={newName}
                                 onChange={e => setNewName(e.target.value)}
                             />
-                            <Button onClick={handleSave} disabled={saving || !newName.trim() || newName === currentUnitName}>
+                            <Button onClick={handleSave} disabled={saving || !newName.trim() || newName === currentUnitName} className="whitespace-nowrap">
                                 {saving ? 'Guardando...' : 'Renombrar Globalmente'}
                             </Button>
                         </div>
@@ -375,14 +375,14 @@ const UsersView: React.FC = () => {
                 </Card>
             )}
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                            <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Nombre</th>
-                            <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Rol</th>
-                            <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Fecha Alta</th>
-                            <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
+                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Nombre</th>
+                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Rol</th>
+                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-black text-slate-400 uppercase tracking-widest hidden sm:table-cell">Fecha Alta</th>
+                            <th className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -416,23 +416,23 @@ const UsersView: React.FC = () => {
                                                     'Autorizado'}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-slate-500 dark:text-slate-400 hidden sm:table-cell">
                                     {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-right">
                                     {deletingId === user.id ? (
                                         <div className="flex justify-end gap-2 animate-in fade-in zoom-in duration-200">
                                             <button
                                                 onClick={() => handleDelete(user.id)}
                                                 disabled={saving}
-                                                className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
+                                                className="px-2 sm:px-3 py-1 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
                                             >
-                                                {saving ? '...' : 'Confirmar'}
+                                                {saving ? '...' : 'Eliminar'}
                                             </button>
                                             <button
                                                 onClick={() => setDeletingId(null)}
                                                 disabled={saving}
-                                                className="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg hover:bg-slate-300 transition-colors"
+                                                className="px-2 sm:px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] sm:text-xs font-bold rounded-lg hover:bg-slate-300 transition-colors"
                                             >
                                                 No
                                             </button>
@@ -463,6 +463,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const [isCartsOpen, setIsCartsOpen] = useState(true);
     const [isTechNavOpen, setIsTechNavOpen] = useState(true);
     const [isRegistrosOpen, setIsRegistrosOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isTabSelectorOpen, setIsTabSelectorOpen] = useState(false);
 
     // Material Creation/Edit State - Now received from props
     // const { createItem, updateItem, deleteItem } = useItems();
@@ -1158,22 +1160,55 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors">
-            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-20">
-                <div className="flex items-center gap-3">
-                    <div className="bg-clinical-600 text-white p-2 rounded-lg">
-                        <Settings size={20} />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors overflow-x-hidden">
+            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2 sm:py-4 flex justify-between items-center sticky top-0 z-40 pt-[calc(0.5rem+env(safe-area-inset-top))]">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="md:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                    <div className="bg-clinical-600 text-white p-1.5 sm:p-2 rounded-lg">
+                        <Settings size={18} />
                     </div>
-                    <h1 className="text-xl font-bold text-slate-900 dark:text-white">Panel de Administración</h1>
+                    <div className="md:hidden relative">
+                        <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">
+                            {activeTab === 'INVENTORY' ? 'Inventario' :
+                                activeTab === 'EQUIPMENT' ? 'Aparataje' :
+                                    activeTab === 'LOCATIONS' ? 'Ubicaciones' :
+                                        activeTab === 'TECHNIQUES' ? 'Técnicas' :
+                                            activeTab === 'CART' ? 'Carro' :
+                                                activeTab === 'USERS' ? 'Usuarios' :
+                                                    activeTab === 'SETTINGS' ? 'Ajustes' :
+                                                        activeTab === 'REGISTROS_STOCK' ? 'Stock' :
+                                                            activeTab === 'REGISTROS_FEEDBACK' ? 'Feedback' : 'Admin'}
+                        </h1>
+
+                    </div>
+                    <h1 className="hidden md:block text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate">Admin</h1>
                 </div>
                 <Button variant="ghost" size="sm" onClick={onLogout} className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700">
                     <LogOut size={16} /> Salir
                 </Button>
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative w-full">
+                {/* Mobile Menu Backdrop */}
+                {isMobileMenuOpen && (
+                    <div
+                        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    />
+                )}
+
                 {/* Sidebar / Tabs */}
-                <div className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-row md:flex-col overflow-x-auto md:overflow-visible shrink-0 transition-colors">
+                <div className={`
+                    fixed md:relative inset-y-0 left-0 w-72 md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
+                    flex flex-col z-50 transform transition-transform duration-300 ease-in-out
+                    ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+                    md:translate-x-0 md:static transition-colors shrink-0
+                `}>
                     {/* 1. Carros Dropdown */}
                     <div className="border-b md:border-b-0 border-transparent transition-all">
                         <button
@@ -1199,6 +1234,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                 setActiveTab('CART');
                                                 setSelectedCartId(cart.id);
                                                 setIsCreating(false);
+                                                setIsMobileMenuOpen(false);
                                             }}
                                             className={`flex items-center gap-3 pl-12 pr-6 py-3 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap text-left border-l-4
                                             ${activeTab === 'CART' && selectedCartId === cart.id ? 'bg-clinical-100/50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/20 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-500 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50'}`}
@@ -1216,8 +1252,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     {/* 2. Inventario */}
                     <button
-                        onClick={() => { setActiveTab('INVENTORY'); setIsCreating(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-b md:border-b-0 md:border-l-4 transition-colors whitespace-nowrap
+                        onClick={() => { setActiveTab('INVENTORY'); setIsCreating(false); setIsMobileMenuOpen(false); }}
+                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'INVENTORY' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                     >
                         <Package size={18} /> Inventario
@@ -1225,8 +1261,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     {/* 3. Aparataje */}
                     <button
-                        onClick={() => { setActiveTab('EQUIPMENT'); setIsCreating(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-b md:border-b-0 md:border-l-4 transition-colors whitespace-nowrap
+                        onClick={() => { setActiveTab('EQUIPMENT'); setIsCreating(false); setIsMobileMenuOpen(false); }}
+                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'EQUIPMENT' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                     >
                         <Monitor size={18} /> Aparataje
@@ -1234,8 +1270,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     {/* 3.1 Ubicaciones */}
                     <button
-                        onClick={() => { setActiveTab('LOCATIONS'); setIsCreating(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-b md:border-b-0 md:border-l-4 transition-colors whitespace-nowrap
+                        onClick={() => { setActiveTab('LOCATIONS'); setIsCreating(false); setIsMobileMenuOpen(false); }}
+                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'LOCATIONS' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                     >
                         <Building2 size={18} /> Ubicaciones
@@ -1243,8 +1279,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     {/* 4. Técnicas */}
                     <button
-                        onClick={() => { setActiveTab('TECHNIQUES'); setIsCreating(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-b md:border-b-0 md:border-l-4 transition-colors whitespace-nowrap
+                        onClick={() => { setActiveTab('TECHNIQUES'); setIsCreating(false); setIsMobileMenuOpen(false); }}
+                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'TECHNIQUES' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                     >
                         <FilePlus size={18} /> Técnicas
@@ -1266,14 +1302,14 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                         {isRegistrosOpen && (
                             <div className="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/50 flex flex-col">
                                 <button
-                                    onClick={() => { setActiveTab('REGISTROS_STOCK'); setIsCreating(false); }}
+                                    onClick={() => { setActiveTab('REGISTROS_STOCK'); setIsCreating(false); setIsMobileMenuOpen(false); }}
                                     className={`flex items-center gap-3 pl-12 pr-6 py-3 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap text-left
                                     ${activeTab === 'REGISTROS_STOCK' ? 'bg-clinical-100/50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/20 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-500 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50'}`}
                                 >
                                     Stock y Caducidades
                                 </button>
                                 <button
-                                    onClick={() => { setActiveTab('REGISTROS_FEEDBACK'); setIsCreating(false); }}
+                                    onClick={() => { setActiveTab('REGISTROS_FEEDBACK'); setIsCreating(false); setIsMobileMenuOpen(false); }}
                                     className={`flex items-center gap-3 pl-12 pr-6 py-3 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap text-left
                                     ${activeTab === 'REGISTROS_FEEDBACK' ? 'bg-clinical-100/50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/20 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-500 dark:text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50'}`}
                                 >
@@ -1285,8 +1321,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     {/* 6. Usuarios */}
                     <button
-                        onClick={() => { setActiveTab('USERS'); setIsCreating(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-b md:border-b-0 md:border-l-4 transition-colors whitespace-nowrap
+                        onClick={() => { setActiveTab('USERS'); setIsCreating(false); setIsMobileMenuOpen(false); }}
+                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'USERS' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                     >
                         <Users size={18} /> Usuarios
@@ -1294,8 +1330,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     {/* 7. Ajustes */}
                     <button
-                        onClick={() => { setActiveTab('SETTINGS'); setIsCreating(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium border-b md:border-b-0 md:border-l-4 transition-colors whitespace-nowrap
+                        onClick={() => { setActiveTab('SETTINGS'); setIsCreating(false); setIsMobileMenuOpen(false); }}
+                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'SETTINGS' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                     >
                         <Settings size={18} /> Ajustes
@@ -1303,12 +1339,12 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 p-6 overflow-y-auto">
+                <div className="flex-1 p-3 sm:p-6 overflow-y-auto w-full md:w-auto">
 
                     {/* Add Material Modal (Bulk) */}
                     {addMaterialData.isOpen && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-4xl w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] border dark:border-slate-800">
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-sm">
+                            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-4xl w-full p-4 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200 flex flex-col h-[95vh] sm:h-auto max-h-[95vh] border dark:border-slate-800">
                                 <div className="flex justify-between items-center border-b dark:border-slate-800 pb-3 shrink-0">
                                     <div>
                                         <h3 className="text-xl font-bold text-slate-900 dark:text-white">Añadir al Carro (Carga Masiva)</h3>
@@ -1319,9 +1355,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                     </button>
                                 </div>
 
-                                <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
+                                <div className="flex-1 flex flex-col md:flex-row gap-4 sm:gap-6 overflow-hidden min-h-0">
                                     {/* LEFT COLUMN: Selection */}
-                                    <div className="flex-1 flex flex-col min-h-0 border-r border-slate-100 pr-6">
+                                    <div className="flex-1 flex flex-col min-h-0 md:border-r border-slate-100 dark:border-slate-800 md:pr-6">
                                         <h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2">
                                             <Package size={18} /> Seleccionar Materiales
                                         </h4>
@@ -1421,7 +1457,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t mt-auto flex justify-end gap-3">
+                                <div className="pt-4 border-t dark:border-slate-800 mt-auto flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                                     <Button variant="ghost" onClick={() => setAddMaterialData(prev => ({ ...prev, isOpen: false }))}>
                                         Cancelar
                                     </Button>
@@ -1865,16 +1901,19 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                 </div>
                             )}
 
-                            <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                                 <h2 className="text-lg font-bold">Listado de Materiales</h2>
-                                <div className="flex items-center gap-4 w-full md:w-auto">
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar..."
-                                        className="w-full md:w-64 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400"
-                                        value={inventorySearch}
-                                        onChange={(e) => setInventorySearch(e.target.value)}
-                                    />
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full md:w-auto">
+                                    <div className="relative flex-1 md:w-64">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar..."
+                                            className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400"
+                                            value={inventorySearch}
+                                            onChange={(e) => setInventorySearch(e.target.value)}
+                                        />
+                                    </div>
                                     <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-lg flex items-center shrink-0">
                                         <button
                                             onClick={() => setViewMode('grid')}
@@ -1891,8 +1930,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                             <List size={18} />
                                         </button>
                                     </div>
-                                    <Button size="sm" className="gap-2 shrink-0" onClick={() => { resetItemForm(); setIsCreating(true); }}>
-                                        <Plus size={16} /> Nuevo Material
+                                    <Button size="sm" className="gap-2 shrink-0 px-3 sm:px-4" onClick={() => { resetItemForm(); setIsCreating(true); }}>
+                                        <Plus size={16} /> <span className="hidden sm:inline">Nuevo Material</span><span className="sm:hidden">Nuevo</span>
                                     </Button>
                                 </div>
                             </div>
@@ -1958,7 +1997,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                         <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                                             <tr>
                                                 <th
-                                                    className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                    className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                                     onClick={() => handleSort('name')}
                                                 >
                                                     <div className="flex items-center gap-1">
@@ -1969,7 +2008,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                     </div>
                                                 </th>
                                                 <th
-                                                    className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                    className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden lg:table-cell"
                                                     onClick={() => handleSort('ubicacion_secundaria')}
                                                 >
                                                     <div className="flex items-center gap-1">
@@ -1980,7 +2019,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                     </div>
                                                 </th>
                                                 <th
-                                                    className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                    className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden sm:table-cell"
                                                     onClick={() => handleSort('ubicacion')}
                                                 >
                                                     <div className="flex items-center gap-1">
@@ -1990,8 +2029,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         )}
                                                     </div>
                                                 </th>
-                                                <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Petitorio</th>
-                                                <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Acciones</th>
+                                                <th className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Pet.</th>
+                                                <th className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Acc.</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -2013,7 +2052,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 group cursor-pointer"
                                                         onClick={() => setViewingItem(item)}
                                                     >
-                                                        <td className="px-6 py-3">
+                                                        <td className="px-4 sm:px-6 py-3">
                                                             <div className="flex items-center gap-3">
                                                                 {item.imageUrl ? (
                                                                     <img src={item.imageUrl} alt="" className="w-8 h-8 rounded object-cover bg-slate-100 dark:bg-slate-700" />
@@ -2022,31 +2061,31 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                         <Package size={16} />
                                                                     </div>
                                                                 )}
-                                                                <span className="font-medium text-slate-900 dark:text-slate-200">{item.name}</span>
+                                                                <span className="font-medium text-slate-900 dark:text-slate-200 max-w-[120px] sm:max-w-none truncate">{item.name}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-3 text-slate-500 dark:text-slate-400">
+                                                        <td className="px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400 hidden lg:table-cell">
                                                             {(() => {
                                                                 const loc = savedLocations.find(l => l.id === item.ubicacion || l.name === item.ubicacion);
                                                                 const parent = loc?.parent_id ? savedLocations.find(l => l.id === loc.parent_id) : null;
                                                                 return parent?.name || item.ubicacion_secundaria || <span className="text-slate-400 italic">No asignada</span>;
                                                             })()}
                                                         </td>
-                                                        <td className="px-6 py-3 text-slate-500 dark:text-slate-400">
+                                                        <td className="px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400 hidden sm:table-cell">
                                                             <div className="flex items-center gap-1">
                                                                 <MapPin size={14} className="text-clinical-400" />
                                                                 {savedLocations.find(l => l.id === item.ubicacion || l.name === item.ubicacion)?.name || item.ubicacion || <span className="text-slate-400 italic">--</span>}
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-3 text-slate-500 dark:text-slate-400">
+                                                        <td className="px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400 font-mono text-xs">
                                                             {item.referencia_petitorio || <span className="text-slate-400 italic">--</span>}
                                                         </td>
-                                                        <td className="px-6 py-3 text-right">
-                                                            <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                                                                <Button variant="ghost" size="sm" onClick={() => handleEditItem(item)} title="Editar">
+                                                        <td className="px-4 sm:px-6 py-3 text-right">
+                                                            <div className="flex justify-end gap-1 sm:gap-2" onClick={e => e.stopPropagation()}>
+                                                                <Button variant="ghost" size="sm" className="p-1 sm:p-2" onClick={() => handleEditItem(item)} title="Editar">
                                                                     <Edit size={16} className="text-slate-400 hover:text-indigo-600 transition-colors" />
                                                                 </Button>
-                                                                <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)} title="Eliminar">
+                                                                <Button variant="ghost" size="sm" className="p-1 sm:p-2" onClick={() => handleDeleteItem(item.id)} title="Eliminar">
                                                                     <Trash2 size={16} className="text-slate-400 hover:text-red-600 transition-colors" />
                                                                 </Button>
                                                             </div>
@@ -2459,8 +2498,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                 <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Añadir Nueva Ubicación Principal</h3>
-                                    <div className="flex gap-4 items-end">
-                                        <div className="flex-1">
+                                    <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
+                                        <div className="flex-1 w-full">
                                             <label htmlFor="loc-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre</label>
                                             <input
                                                 id="loc-name"
@@ -2471,7 +2510,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                 onChange={e => setNewLocation({ ...newLocation, name: e.target.value })}
                                             />
                                         </div>
-                                        <div className="w-48">
+                                        <div className="w-full sm:w-48">
                                             <label htmlFor="loc-type" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo</label>
                                             <select
                                                 id="loc-type"
@@ -2484,8 +2523,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                 <option value="EXTERNAL">Externo</option>
                                             </select>
                                         </div>
-
-                                        <Button onClick={handleInitiateCreateLocation} className="mb-0.5" disabled={!newLocation.name}>Añadir</Button>
+                                        <Button onClick={handleInitiateCreateLocation} className="w-full sm:w-auto mb-0.5" disabled={!newLocation.name}>Añadir</Button>
                                     </div>
                                 </div>
 
@@ -2783,11 +2821,11 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                         if (latestRevisions.length === 0) return null;
 
                                         return (
-                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
                                                 {latestRevisions.map((item: any) => (
                                                     <div
                                                         key={item.location_id}
-                                                        className="bg-white dark:bg-slate-800 p-3 rounded-lg border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+                                                        className="bg-white dark:bg-slate-800 p-3 rounded-lg border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex items-center"
                                                         style={{ borderColor: item.location_color || '#e2e8f0' }}
                                                     >
                                                         {/* Color accent bar */}
@@ -2821,20 +2859,20 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                         <table className="w-full text-left text-sm">
                                             <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                                                 <tr>
-                                                    <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Fecha</th>
+                                                    <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Fecha</th>
                                                     {activeTab === 'REGISTROS_STOCK' ? (
                                                         <>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Revisor</th>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Ubicación</th>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Caducidades</th>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Notas</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Revisor</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Ubicación</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400 hidden sm:table-cell">Caducidades</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Notas</th>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Valoración</th>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Técnica</th>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Incidencia</th>
-                                                            <th className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Descripción</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Valor/Estado</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400 hidden sm:table-cell">Técnica</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Incidencia</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Descripción</th>
                                                         </>
                                                     )}
                                                 </tr>
@@ -2851,20 +2889,25 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         );
                                                         return revisions.map((rev: any) => (
                                                             <tr key={rev.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                                                                    {new Date(rev.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                                </td>
-                                                                <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200">{rev.reviewer_name}</td>
-                                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span
-                                                                            className="w-3 h-3 rounded-full"
-                                                                            style={{ backgroundColor: rev.locations?.color || '#cbd5e1' }}
-                                                                        />
-                                                                        {rev.locations?.name || 'Desconocida'}
+                                                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                                                    <div className="text-xs sm:text-sm">
+                                                                        {new Date(rev.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                                    </div>
+                                                                    <div className="text-[10px] sm:hidden text-slate-400">
+                                                                        {new Date(rev.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-6 py-4">
+                                                                <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-slate-900 dark:text-slate-200 text-xs sm:text-sm">{rev.reviewer_name}</td>
+                                                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-600 dark:text-slate-400">
+                                                                    <div className="flex items-center gap-2 text-xs sm:text-sm">
+                                                                        <span
+                                                                            className="w-2 h-2 sm:w-3 sm:h-3 rounded-full shrink-0"
+                                                                            style={{ backgroundColor: rev.locations?.color || '#cbd5e1' }}
+                                                                        />
+                                                                        <span className="truncate max-w-[80px] sm:max-w-none">{rev.locations?.name || 'Desconocida'}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
                                                                     {rev.expiry_checked ? (
                                                                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium border border-emerald-100">
                                                                             <Check size={12} /> Revisado
@@ -2873,7 +2916,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                         <span className="text-slate-400 text-xs">-</span>
                                                                     )}
                                                                 </td>
-                                                                <td className="px-6 py-4 text-right text-slate-500 dark:text-slate-400 italic max-w-xs truncate">
+                                                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-right text-slate-500 dark:text-slate-400 italic max-w-[100px] sm:max-w-xs truncate text-xs sm:text-sm">
                                                                     {rev.notes || '-'}
                                                                 </td>
                                                             </tr>
@@ -2928,18 +2971,17 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                                     return rows.map((row: any) => (
                                                         <tr key={row.id} className="hover:bg-slate-50 transition-colors">
-                                                            <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
-                                                                {new Date(row.created_at).toLocaleString('es-ES', {
-                                                                    day: '2-digit',
-                                                                    month: '2-digit',
-                                                                    year: 'numeric',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit'
-                                                                })}
+                                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-600 whitespace-nowrap">
+                                                                <div className="text-xs sm:text-sm">
+                                                                    {new Date(row.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                                </div>
+                                                                <div className="text-[10px] sm:hidden text-slate-400">
+                                                                    {new Date(row.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                                                </div>
                                                             </td>
-                                                            <td className="px-6 py-4">
+                                                            <td className="px-4 sm:px-6 py-3 sm:py-4">
                                                                 {row.source === 'incident' ? (
-                                                                    <span className={`inline-flex px-2 py-1 rounded text-[10px] font-medium ${row.status === 'OPEN' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                                                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium ${row.status === 'OPEN' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
                                                                         row.status === 'RESOLVED' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
                                                                             'bg-slate-50 text-slate-400 border border-slate-100'
                                                                         }`}>
@@ -2948,21 +2990,21 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                     </span>
                                                                 ) : (
                                                                     row.rating ? (
-                                                                        <div className="flex text-amber-400">
+                                                                        <div className="flex text-amber-400 text-[10px] sm:text-sm">
                                                                             {'★'.repeat(row.rating)}
                                                                             <span className="text-slate-200">{'★'.repeat(5 - row.rating)}</span>
                                                                         </div>
                                                                     ) : <span className="text-slate-400 text-xs">-</span>
                                                                 )}
                                                             </td>
-                                                            <td className="px-6 py-4 text-slate-600">
+                                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-600 hidden sm:table-cell text-sm">
                                                                 {row.related_technique_id ?
                                                                     (techniques.find((t: any) => t.id === row.related_technique_id)?.name || '-')
                                                                     : '-'
                                                                 }
                                                             </td>
-                                                            <td className="px-6 py-4">
-                                                                <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${row.type === 'INCIDENCE' ? 'bg-red-100 text-red-700' :
+                                                            <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                                                <span className={`px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${row.type === 'INCIDENCE' ? 'bg-red-100 text-red-700' :
                                                                     row.type === 'RATING' ? 'bg-indigo-100 text-indigo-700' :
                                                                         row.type === 'SUGGESTION' ? 'bg-amber-100 text-amber-700' :
                                                                             'bg-slate-100 text-slate-700'
@@ -2974,9 +3016,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                     )}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-6 py-4 text-slate-900 min-w-[200px] text-right">
-                                                                <p className="font-medium">{row.description}</p>
-                                                                {row.category && <p className="text-[10px] text-slate-400 uppercase mt-1">{row.category}</p>}
+                                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-900 min-w-[120px] sm:min-w-[200px] text-right">
+                                                                <p className="font-medium text-xs sm:text-sm line-clamp-2 sm:line-clamp-none">{row.description}</p>
+                                                                {row.category && <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase mt-0.5 sm:mt-1">{row.category}</p>}
                                                             </td>
                                                         </tr>
                                                     ));
@@ -3005,9 +3047,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                 </button>
                             </div>
 
-                            <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
+                            <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden min-h-0">
                                 {/* LEFT COLUMN: Available Materials */}
-                                <div className="flex-1 flex flex-col min-h-0 border-r border-slate-100 dark:border-slate-800 pr-6">
+                                <div className="flex-1 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 pb-4 md:pb-0 md:pr-6">
                                     <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
                                         <List size={18} /> Disponibles
                                     </h4>
@@ -3119,21 +3161,21 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
             {
                 viewingTechnique && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setViewingTechnique(null)}>
-                        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
-                            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative flex flex-col max-h-[95vh] sm:max-h-[90vh] mx-2 sm:mx-0" onClick={e => e.stopPropagation()}>
+                            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
                                 <div>
-                                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{viewingTechnique.name}</h3>
-                                    <p className="text-slate-500 dark:text-slate-400">Detalles de la técnica y materiales necesarios</p>
+                                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{viewingTechnique.name}</h3>
+                                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Detalles de la técnica y materiales necesarios</p>
                                 </div>
                                 <button
                                     onClick={() => setViewingTechnique(null)}
-                                    className="text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-full transition-colors"
+                                    className="text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 sm:p-2 rounded-full transition-colors"
                                 >
-                                    <X size={24} />
+                                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </button>
                             </div>
 
-                            <div className="p-6 overflow-y-auto space-y-6">
+                            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6">
                                 {viewingTechnique.description && (
                                     <div>
                                         <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
@@ -3376,9 +3418,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                 </button>
                             </div>
 
-                            <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
+                            <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden min-h-0">
                                 {/* LEFT COLUMN: Available Equipment */}
-                                <div className="flex-1 flex flex-col min-h-0 border-r border-slate-100 dark:border-slate-800 pr-6">
+                                <div className="flex-1 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 pb-4 md:pb-0 md:pr-6">
                                     <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
                                         <List size={18} /> Disponibles
                                     </h4>
