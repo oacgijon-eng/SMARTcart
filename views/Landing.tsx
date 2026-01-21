@@ -19,7 +19,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6 relative transition-colors duration-300">
 
       {/* Theme Toggle */}
-      <div className="absolute top-6 left-6">
+      <div className="absolute top-6 left-6 pt-[env(safe-area-inset-top)]">
         <button
           onClick={toggleTheme}
           className="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-400 hover:text-yellow-500 dark:hover:text-yellow-400 shadow-md transition-all"
@@ -41,12 +41,9 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">SMARTcart</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Asistente de Carros de Técnicas</p>
             {unitName && (
-              <button
-                onClick={onChangeUnit}
-                className="mt-2 text-sm font-medium text-clinical-600 dark:text-clinical-400 bg-clinical-50 dark:bg-clinical-900/30 px-3 py-1 rounded-full hover:bg-clinical-100 transition-colors"
-              >
+              <p className="mt-2 text-sm font-medium text-clinical-600 dark:text-clinical-400 bg-clinical-50 dark:bg-clinical-900/30 px-3 py-1 rounded-full inline-block">
                 {unitName}
-              </button>
+              </p>
             )}
           </div>
 
@@ -58,10 +55,10 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
             onClick={onNurseStart}
             size="xl"
             fullWidth
-            className="shadow-xl shadow-clinical-100 dark:shadow-none flex flex-col items-center justify-center py-12 gap-2 h-auto"
+            className="shadow-xl shadow-clinical-100 dark:shadow-none flex flex-col items-center justify-center py-8 gap-2 h-auto"
 
           >
-            <span className="text-2xl">Iniciar Asistencia Técnica</span>
+            <span className="text-xl font-bold">Iniciar Asistencia Técnica</span>
           </Button>
 
           <Button
@@ -80,7 +77,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
       </div>
 
       {/* Admin Link */}
-      <div className="absolute top-6 right-6">
+      <div className="absolute top-6 right-6 pt-[env(safe-area-inset-top)]">
         <button
           onClick={onAdminStart}
           className="flex items-center gap-2 text-slate-400 hover:text-clinical-600 transition-colors px-4 py-2 rounded-lg hover:bg-slate-100 text-sm font-medium"

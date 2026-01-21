@@ -3,22 +3,28 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { Incident } from '../types';
 
-export function useIncidents() {
+export function useIncidents(unitId?: string) {
     const [incidents, setIncidents] = useState<Incident[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchIncidents();
-    }, []);
+    }, [unitId]);
 
     async function fetchIncidents() {
         try {
             setLoading(true);
-            const { data, error } = await supabase
+            let query = supabase
                 .from('incidents')
                 .select('*')
                 .order('created_at', { ascending: false });
+
+            if (unitId) {
+                query = query.eq('unit_id', unitId);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -35,7 +41,10 @@ export function useIncidents() {
         try {
             const { data, error } = await supabase
                 .from('incidents')
-                .insert([incident])
+                .insert([{
+                    ...incident,
+                    unit_id: incident.unit_id || unitId
+                }])
                 .select()
                 .single();
 

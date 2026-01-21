@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
-import { Item, Technique, LocationType, KitItem, Equipment, TechniqueEquipment } from '../types';
+import { Item, Technique, KitItem, Equipment, TechniqueEquipment } from '../types';
 
 export function useItems() {
     const [items, setItems] = useState<Item[]>([]);
@@ -18,10 +18,6 @@ export function useItems() {
                 name: row.name,
                 imageUrl: row.image_url,
                 category: row.category,
-                locationType: row.location_type as LocationType,
-                ubicacion: row.cart_location,
-                ubicacion_secundaria: row.warehouse_location,
-                stockIdeal: row.stock_ideal,
                 referencia_petitorio: row.referencia_petitorio
             }));
 
@@ -45,11 +41,7 @@ export function useItems() {
                 .insert([{
                     id: crypto.randomUUID(),
                     name: item.name,
-                    stock_ideal: item.stockIdeal,
-                    cart_location: item.ubicacion,
-                    warehouse_location: item.ubicacion_secundaria || '',
                     category: item.category,
-                    location_type: item.locationType,
                     image_url: item.imageUrl,
                     referencia_petitorio: item.referencia_petitorio || ''
                 }])
@@ -70,11 +62,7 @@ export function useItems() {
             // Map frontend keys to DB keys if necessary, or just rely on spread if keys match (they don't fully)
             const dbUpdates: any = {};
             if (updates.name) dbUpdates.name = updates.name;
-            if (updates.stockIdeal !== undefined) dbUpdates.stock_ideal = updates.stockIdeal;
-            if (updates.ubicacion) dbUpdates.cart_location = updates.ubicacion;
-            if (updates.ubicacion_secundaria) dbUpdates.warehouse_location = updates.ubicacion_secundaria;
             if (updates.category) dbUpdates.category = updates.category;
-            if (updates.locationType) dbUpdates.location_type = updates.locationType;
             if (updates.imageUrl) dbUpdates.image_url = updates.imageUrl;
             if (updates.referencia_petitorio !== undefined) dbUpdates.referencia_petitorio = updates.referencia_petitorio;
 
@@ -151,10 +139,6 @@ export function useTechniques() {
                         name: ti.items.name,
                         imageUrl: ti.items.image_url,
                         category: ti.items.category,
-                        locationType: ti.items.location_type as LocationType,
-                        ubicacion: ti.items.cart_location,
-                        ubicacion_secundaria: ti.items.warehouse_location,
-                        stockIdeal: ti.items.stock_ideal,
                         referencia_petitorio: ti.items.referencia_petitorio
                     }
                 }));
@@ -368,14 +352,18 @@ export function useTechniques() {
     return { techniques, loading, error, refreshTechniques: fetchTechniques, createTechnique, updateTechnique, deleteTechnique };
 }
 
-export function useEquipment() {
+export function useEquipment(unitId?: string) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     async function fetchEquipment() {
         try {
-            const { data, error } = await supabase.from('equipment').select('*').order('name');
+            let query = supabase.from('equipment').select('*').order('name');
+            if (unitId) {
+                query = query.eq('unit_id', unitId);
+            }
+            const { data, error } = await query;
             if (error) throw error;
 
             const mapped: Equipment[] = (data || []).map((row: any) => ({
@@ -388,7 +376,8 @@ export function useEquipment() {
                 maintenanceStatus: row.maintenance_status,
                 location: row.location,
                 requiresPower: row.requires_power,
-                created_at: row.created_at
+                created_at: row.created_at,
+                unit_id: row.unit_id
             }));
 
             setEquipment(mapped);
@@ -402,7 +391,7 @@ export function useEquipment() {
 
     useEffect(() => {
         fetchEquipment();
-    }, []);
+    }, [unitId]);
 
     async function createEquipment(data: Omit<Equipment, 'id'>) {
         try {
@@ -414,7 +403,8 @@ export function useEquipment() {
                 stock_quantity: data.stockQuantity,
                 maintenance_status: data.maintenanceStatus,
                 location: data.location || '',
-                requires_power: data.requiresPower
+                requires_power: data.requiresPower,
+                unit_id: data.unit_id || unitId
             }]);
 
             if (error) throw error;
@@ -433,7 +423,6 @@ export function useEquipment() {
             if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
             if (updates.category) dbUpdates.category = updates.category;
             if (updates.stockQuantity !== undefined) dbUpdates.stock_quantity = updates.stockQuantity;
-            if (updates.maintenanceStatus) dbUpdates.maintenance_status = updates.maintenanceStatus;
             if (updates.maintenanceStatus) dbUpdates.maintenance_status = updates.maintenanceStatus;
             if (updates.location !== undefined) dbUpdates.location = updates.location;
             if (updates.requiresPower !== undefined) dbUpdates.requires_power = updates.requiresPower;
@@ -476,7 +465,7 @@ export function useEquipment() {
     };
 }
 
-export function useStockRevisions() {
+export function useStockRevisions(unitId?: string) {
     const [revisions, setRevisions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -484,7 +473,7 @@ export function useStockRevisions() {
     async function fetchRevisions() {
         try {
             setLoading(true);
-            const { data, error } = await supabase
+            let query = supabase
                 .from('stock_revisions')
                 .select(`
                     *,
@@ -495,6 +484,11 @@ export function useStockRevisions() {
                 `)
                 .order('created_at', { ascending: false });
 
+            if (unitId) {
+                query = query.eq('unit_id', unitId);
+            }
+
+            const { data, error } = await query;
             if (error) throw error;
             setRevisions(data || []);
         } catch (e: any) {
@@ -507,7 +501,7 @@ export function useStockRevisions() {
 
     useEffect(() => {
         fetchRevisions();
-    }, []);
+    }, [unitId]);
 
     return {
         revisions,

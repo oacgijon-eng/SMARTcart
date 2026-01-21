@@ -2,7 +2,7 @@ import { correctText } from '../services/ai';
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
 import { PageHeader, Button, Card, Badge } from '../components/UI';
-import { Technique, Item, Location, CartItem, LocationType } from '../types';
+import { Technique, Item, Location, CartItem } from '../types';
 
 import { CheckCircle2, Circle, ArrowRight, Warehouse, RotateCw, Box, Angry, Frown, Meh, Smile, Laugh, MessageSquareWarning, ChevronDown, Search, Plus, Minus, X } from 'lucide-react';
 
@@ -15,23 +15,14 @@ interface RestockProps {
 }
 
 const getItemLocationName = (item: Item, locations: Location[]) => {
-    // Try to find the location object
-    const loc = locations.find(l => l.id === item.ubicacion || l.name === item.ubicacion);
-
-    // If loc exists and has a parent, find the parent
-    if (loc?.parent_id) {
-        const parent = locations.find(l => l.id === loc.parent_id);
-        if (parent) return `${parent.name} - ${loc.name}`;
-    }
-
-    // Fallback logic
-    if (item.ubicacion_secundaria === 'Almacén General') return 'Almacén';
-    return item.ubicacion_secundaria;
+    // Legacy location name extraction is limited now.
+    // We can try to match known carts or return generic.
+    return 'Almacén';
 };
 
 const getSpecificLocationName = (locationValue: string, locations: Location[]) => {
     const loc = locations.find(l => l.id === locationValue);
-    return loc ? loc.name : locationValue;
+    return loc ? loc.name : (locationValue || '-');
 };
 
 export const Restock: React.FC<RestockProps> = ({ technique, inventory, locations, cartContents, onFinish }) => {
@@ -60,24 +51,23 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
 
         const resolvedLocations: { name: string; color: string; stockIdeal: number }[] = [];
 
-        if (fullItem?.locationType === LocationType.CART) {
-            cartItems.forEach((cItem) => {
-                const drawer = locations.find(l => l.id === cItem.locationId);
-                if (drawer) {
-                    let locString = drawer.name;
-                    let locColor = drawer.color || '#0ea5e9';
+        // Always process cart items to find locations
+        cartItems.forEach((cItem) => {
+            const drawer = locations.find(l => l.id === cItem.locationId);
+            if (drawer) {
+                let locString = drawer.name;
+                let locColor = drawer.color || '#0ea5e9';
 
-                    if (drawer.parent_id) {
-                        const cart = locations.find(l => l.id === drawer.parent_id);
-                        if (cart) {
-                            locString = `${cart.name} - ${drawer.name}`;
-                            locColor = cart.color || locColor;
-                        }
+                if (drawer.parent_id) {
+                    const cart = locations.find(l => l.id === drawer.parent_id);
+                    if (cart) {
+                        locString = `${cart.name} - ${drawer.name}`;
+                        locColor = cart.color || locColor;
                     }
-                    resolvedLocations.push({ name: locString, color: locColor, stockIdeal: cItem.stockIdeal });
                 }
-            });
-        }
+                resolvedLocations.push({ name: locString, color: locColor, stockIdeal: cItem.stockIdeal });
+            }
+        });
 
         return { ...kitItem, item: fullItem, resolvedLocations };
     });
@@ -191,7 +181,7 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
 
                     {hydratedItems.map((kitItem, idx) => {
                         const item = kitItem.item!;
-                        if (item.locationType === 'EXTERNAL') return null;
+                        // if (item.locationType === 'EXTERNAL') return null; // Removed check
 
                         const uniqueId = `${item.id}-${idx}`;
                         const isChecked = checkedItems[uniqueId];
@@ -234,13 +224,9 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
 
                                                 </div>
                                             ) : (
-                                                // Fallback for non-cart or unresolved items
-                                                (kitItem.item?.stockIdeal !== undefined) && (
-                                                    <span className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-bold">
-                                                        Ideal: <span className="text-slate-900 dark:text-white text-base">{kitItem.item.stockIdeal}</span>
-                                                    </span>
-                                                )
-
+                                                <span className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-bold">
+                                                    -
+                                                </span>
                                             )}
                                         </div>
                                     </div>
@@ -253,7 +239,7 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                                         <ArrowRight size={14} className="text-slate-400 hidden md:block" />
                                         <div className="flex items-center gap-1.5 text-clinical-700 dark:text-clinical-300 bg-clinical-50 dark:bg-clinical-900/20 px-2 py-1 rounded font-medium">
                                             <Box size={14} />
-                                            <span>{getSpecificLocationName(item.ubicacion, locations)}</span>
+                                            <span>{getSpecificLocationName('', locations)}</span>
                                         </div>
 
                                     </div>
@@ -301,7 +287,7 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                                                 <img src={item.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600" />
                                                 <div className="flex-1">
                                                     <p className="font-bold text-slate-900 dark:text-white">{item.name}</p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{getSpecificLocationName(item.ubicacion, locations)}</p>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400">-</p>
                                                 </div>
 
                                                 <div className="bg-clinical-100 text-clinical-700 p-2 rounded-full">
@@ -357,24 +343,25 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                                                 {/* Detailed Stock Breakdown for Extra Items */}
                                                 {(() => {
                                                     let resolvedLocations: { name: string; color: string; stockIdeal: number }[] = [];
-                                                    if (item.locationType === 'CART') {
-                                                        const cartItems = cartContents.filter(ci => ci.itemId === item.id);
-                                                        cartItems.forEach((cItem) => {
-                                                            const drawer = locations.find(l => l.id === cItem.locationId);
-                                                            if (drawer) {
-                                                                let locString = drawer.name;
-                                                                let locColor = drawer.color || '#0ea5e9';
-                                                                if (drawer.parent_id) {
-                                                                    const cart = locations.find(l => l.id === drawer.parent_id);
-                                                                    if (cart) {
-                                                                        locString = `${cart.name} - ${drawer.name}`;
-                                                                        locColor = cart.color || locColor;
-                                                                    }
+                                                    // if (item.locationType === 'CART') {
+                                                    // Always try to find in cart contents
+                                                    const cartItems = cartContents.filter(ci => ci.itemId === item.id);
+                                                    cartItems.forEach((cItem) => {
+                                                        const drawer = locations.find(l => l.id === cItem.locationId);
+                                                        if (drawer) {
+                                                            let locString = drawer.name;
+                                                            let locColor = drawer.color || '#0ea5e9';
+                                                            if (drawer.parent_id) {
+                                                                const cart = locations.find(l => l.id === drawer.parent_id);
+                                                                if (cart) {
+                                                                    locString = `${cart.name} - ${drawer.name}`;
+                                                                    locColor = cart.color || locColor;
                                                                 }
-                                                                resolvedLocations.push({ name: locString, color: locColor, stockIdeal: cItem.stockIdeal });
                                                             }
-                                                        });
-                                                    }
+                                                            resolvedLocations.push({ name: locString, color: locColor, stockIdeal: cItem.stockIdeal });
+                                                        }
+                                                    });
+                                                    // }
 
                                                     if (resolvedLocations.length > 0) {
                                                         return (
@@ -391,13 +378,8 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                                                                 ))}
                                                             </div>
                                                         );
-                                                    } else if (item.stockIdeal !== undefined) {
-                                                        return (
-                                                            <span className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-bold">
-                                                                Ideal: <span className="text-slate-900 dark:text-white text-base">{item.stockIdeal}</span>
-                                                            </span>
-                                                        );
-
+                                                    } else {
+                                                        return null;
                                                     }
                                                     return null;
                                                 })()}
@@ -507,6 +489,6 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                     </Button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

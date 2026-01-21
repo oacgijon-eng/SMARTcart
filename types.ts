@@ -9,8 +9,9 @@ export interface Location {
   id: string;
   name: string;
   type: LocationType | string;
-  parent_id?: string; // Changed from parentId to match DB
-  color?: string; // e.g., "#3b82f6"
+  parent_id?: string;
+  color?: string;
+  unit_id?: string; // Tenant ID
 }
 
 export interface Item {
@@ -18,11 +19,9 @@ export interface Item {
   name: string;
   imageUrl: string;
   category: string;
-  locationType: LocationType;
-  ubicacion: string; // e.g., "Cajón 1"
-  ubicacion_secundaria: string; // e.g., "Almacén General Estantería B"
-  stockIdeal: number;
-  carts?: CartItem[]; // Hydrated cart items for this item
+  // Global Catalog: No location or stock data here.
+  // Those are now in cart_items / warehouse_items linked by unit.
+  carts?: CartItem[]; // Example of hydration if needed, but risky if not filtered by unit.
   referencia_petitorio?: string;
 }
 
@@ -44,11 +43,11 @@ export interface KitItem {
 export interface Technique {
   id: string;
   name: string;
-  category: string; // e.g., "Vías", "Sondajes"
+  category: string;
   description: string;
-  protocolUrl: string; // Dummy URL for PDF
+  protocolUrl: string;
   iconName: string;
-  cartIds?: string[]; // IDs of associated carts
+  cartIds?: string[];
   items: KitItem[];
   equipment?: TechniqueEquipment[];
 }
@@ -75,6 +74,7 @@ export interface Incident {
   related_technique_id?: string;
   created_at: string;
   status: 'OPEN' | 'RESOLVED' | 'DISMISSED';
+  unit_id?: string;
 }
 
 export interface Equipment {
@@ -82,12 +82,13 @@ export interface Equipment {
   name: string;
   description: string;
   imageUrl: string;
-  category: string; // 'Respiradores', 'Bombas', etc.
+  category: string;
   stockQuantity: number;
   maintenanceStatus: 'Operativo' | 'En Revisión' | 'Avariado';
   location?: string;
   requiresPower?: boolean;
   created_at?: string;
+  unit_id?: string;
 }
 
 export interface StockRevision {
@@ -101,16 +102,18 @@ export interface StockRevision {
     name: string;
     color?: string;
   };
+  unit_id?: string;
 }
 
 export interface Feedback {
   id: string;
   type: 'RATING' | 'SUGGESTION' | 'COMMENT';
   category?: string;
-  issue?: string; // Specific issue reported
+  issue?: string;
   description: string;
-  rating?: number; // 1-5 stars
+  rating?: number;
   created_at: string;
-  user_name?: string; // Optional user identifier
+  user_name?: string;
   technique_id?: string;
+  unit_id?: string;
 }

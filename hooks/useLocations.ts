@@ -8,24 +8,31 @@ export interface Location {
     type: 'CART' | 'WAREHOUSE' | 'EXTERNAL';
     parent_id?: string | null;
     color?: string;
+    unit_id?: string;
 }
 
-export function useLocations() {
+export function useLocations(unitId?: string) {
     const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchLocations();
-    }, []);
+    }, [unitId]);
 
     async function fetchLocations() {
         try {
             setLoading(true);
-            const { data, error } = await supabase
+            let query = supabase
                 .from('locations')
                 .select('*')
                 .order('name');
+
+            if (unitId) {
+                query = query.eq('unit_id', unitId);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setLocations(data as Location[]);
@@ -45,7 +52,8 @@ export function useLocations() {
                     name: location.name,
                     type: location.type,
                     parent_id: location.parent_id || null,
-                    color: location.color || null
+                    color: location.color || null,
+                    unit_id: location.unit_id || unitId
                 }])
                 .select()
                 .single();

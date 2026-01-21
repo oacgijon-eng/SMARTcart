@@ -11,7 +11,6 @@ import { TechniqueDetail } from './views/TechniqueDetail';
 import { Restock } from './views/Restock';
 import { StockRevision } from './views/StockRevision';
 import { AdminLogin, AdminDashboard } from './views/Admin';
-import { UnitSelection } from './views/UnitSelection';
 import { useProfile } from './hooks/useProfile';
 import { useUnits } from './hooks/useUnits';
 
@@ -30,12 +29,28 @@ const AppContent: React.FC = () => {
   const [view, setView] = useState<ViewState>('LANDING');
   const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null);
 
+  // Unit State
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(() => {
+    return localStorage.getItem('SMARTCART_UNIT_ID');
+  });
+
+  // Derive unit name from ID
+  const selectedUnit = React.useMemo(() => {
+    // Check if units is available, if not fallback to localStorage name or null
+    // We access 'units' from useUnits hook but need to be careful about order if useUnits depends on selectedUnitId
+    // useUnits does NOT depend on selectedUnitId, so we can call it after.
+    // BUT we need 'units' here. So 'units' must be defined before this useMemo!
+    // Wait, 'units' is defined at line 37.
+    // So I must move 'units' definition UP as well.
+    return localStorage.getItem('SMARTCART_UNIT_NAME') || null;
+  }, [selectedUnitId]);
+
   const { items, loading: itemsLoading, error: itemsError, refreshItems, createItem, updateItem, deleteItem } = useItems();
   const { techniques, loading: techniquesLoading, error: techniquesError, refreshTechniques, createTechnique, updateTechnique, deleteTechnique } = useTechniques();
-  const { locations, fetchLocations: refreshLocations, createLocation, updateLocation, deleteLocation } = useLocations(); // Fetch locations
-  const { allItems: cartContents, refresh: refreshCartContents } = useGlobalCartItems(); // Fetch all cart contents
-  const { units, loading: unitsLoading } = useUnits();
-  const { equipment, refreshEquipment, createEquipment, updateEquipment, deleteEquipment } = useEquipment();
+  const { locations, fetchLocations: refreshLocations, createLocation, updateLocation, deleteLocation } = useLocations(selectedUnitId || undefined);
+  const { allItems: cartContents, refresh: refreshCartContents } = useGlobalCartItems();
+  const { units, loading: unitsLoading, createUnit } = useUnits();
+  const { equipment, refreshEquipment, createEquipment, updateEquipment, deleteEquipment } = useEquipment(selectedUnitId || undefined);
 
   // Auth Hook
   const { session, signIn, signOut } = useAuth();
@@ -92,28 +107,51 @@ const AppContent: React.FC = () => {
     // If session exists but role is wrong, we let the UI handle the error state below
   }, [view, session]);
 
-  // Unit State
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(() => {
-    return localStorage.getItem('SMARTCART_UNIT_ID');
-  });
+  // Unit State Moved Up
 
-  // Derive unit name from ID
-  const selectedUnit = React.useMemo(() => {
-    if (!selectedUnitId || !units) return null;
-    return units.find(u => u.id === selectedUnitId)?.name || localStorage.getItem('SMARTCART_UNIT_NAME') || null;
-  }, [selectedUnitId, units]);
-
-  // Effect to force Unit Selection if not set
+  // Effect to handle single unit architecture (automatic selection/creation)
   React.useEffect(() => {
-    if (!selectedUnitId && view === 'LANDING') {
-      setView('UNIT_SELECTION');
-    }
-  }, [selectedUnitId, view]);
+    const initUnit = async () => {
+      // If we already have a unit ID, we're good
+      if (selectedUnitId) return;
+
+      // If we are in the middle of a login, don't interfere
+      if (view === 'ADMIN_LOGIN') return;
+
+      // If units are still loading, wait
+      if (unitsLoading) return;
+
+      try {
+        console.log("Single Unit Init: Checking existing units...");
+        if (units && units.length > 0) {
+          // Auto-select the first available unit
+          const firstUnit = units[0];
+          console.log("Single Unit Init: Auto-selecting unit", firstUnit.name);
+          handleUnitSelect(firstUnit.id, firstUnit.name);
+        } else {
+          // No units exist, create a default one
+          console.log("Single Unit Init: Creating default 'Unidad Principal'...");
+          const newUnit = await createUnit({
+            name: 'Unidad Principal',
+            description: 'Unidad configurada automáticamente'
+          });
+          if (newUnit) {
+            handleUnitSelect((newUnit as any).id, 'Unidad Principal');
+          }
+        }
+      } catch (err) {
+        console.error("Error initializing default unit:", err);
+      }
+    };
+
+    initUnit();
+  }, [selectedUnitId, units, unitsLoading, view]);
 
   const handleUnitSelect = (unitId: string, unitName: string) => {
     try {
       localStorage.setItem('SMARTCART_UNIT_ID', unitId);
-      localStorage.setItem('SMARTCART_UNIT_NAME', unitName); // Fallback for offline or fast load
+      localStorage.setItem('SMARTCART_UNIT_NAME', unitName);
+      localStorage.setItem('SMARTCART_UNIT', unitName); // Consistency
     } catch (e) {
       console.warn('LocalStorage not available:', e);
     }
@@ -122,18 +160,16 @@ const AppContent: React.FC = () => {
   };
 
   const handleChangeUnit = () => {
-    setView('UNIT_SELECTION');
+    // In single unit mode, this might not be needed, but we keep the handler
+    // setView('UNIT_SELECTION'); 
   };
 
   // Render Logic
   return (
     <div className="font-sans antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 dark:text-slate-50 min-h-screen">
 
-      {/* Unit Selection Overlay */}
-      {/* Unit Selection Overlay */}
-      {(view === 'UNIT_SELECTION' || (!selectedUnitId && view !== 'ADMIN_LOGIN')) ? (
-        <UnitSelection onSelect={handleUnitSelect} />
-      ) : (
+      {/* Main Content Render */}
+      <div className="w-full">
         <>
           {view === 'LANDING' && (
             <Landing
@@ -181,6 +217,7 @@ const AppContent: React.FC = () => {
               cartContents={cartContents}
               onRefresh={refreshCartContents}
               onBack={handleBackToLanding}
+              unitId={selectedUnitId || undefined}
             />
           )}
 
@@ -256,12 +293,13 @@ const AppContent: React.FC = () => {
                   createLocation={createLocation}
                   updateLocation={updateLocation}
                   deleteLocation={deleteLocation}
+                  unitId={selectedUnitId || undefined}
                 />
               )}
             </>
           )}
         </>
-      )}
+      </div>
     </div>
   );
 };

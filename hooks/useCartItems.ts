@@ -180,19 +180,26 @@ export function useCartItems(cartType: string) {
     return { cartItems, loading, error, refresh: fetchCartItems, updateCartItemStock, addCartItem, removeCartItem, syncCartItems };
 }
 
-export function useGlobalCartItems() {
+export function useGlobalCartItems(unitId?: string) {
     const [allItems, setAllItems] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('cart_contents')
                 .select(`
                     id, location_id, item_id, stock_ideal, next_expiry_date,
-                    items (id, name, category, image_url)
+                    items (id, name, category, image_url),
+                    locations!inner(unit_id)
                 `);
+
+            if (unitId) {
+                query = query.eq('locations.unit_id', unitId);
+            }
+
+            const { data, error } = await query;
 
             if (error) {
                 console.error('Error fetching global cart items:', error);
@@ -227,7 +234,7 @@ export function useGlobalCartItems() {
 
     useEffect(() => {
         fetchAll();
-    }, [fetchAll]);
+    }, [unitId]);
 
     return { allItems, loading, refresh: fetchAll };
 }

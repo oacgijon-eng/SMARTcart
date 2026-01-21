@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { PageHeader, Button, Card } from '../components/UI';
 import { CartView } from '../components/CartView';
 import { Item, Technique, Equipment } from '../types';
-import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search } from 'lucide-react';
+import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck } from 'lucide-react';
 
 import { supabase } from '../services/supabase';
 import { Location } from '../hooks/useLocations';
@@ -35,6 +35,7 @@ interface AdminProps {
     createLocation: (location: any) => Promise<any>;
     updateLocation: (id: string, updates: any) => Promise<any>;
     deleteLocation: (id: string) => Promise<any>;
+    unitId: string;
 }
 
 export const AdminLogin: React.FC<{
@@ -135,27 +136,27 @@ const LOCATION_COLORS = [
     { name: 'Gris', value: '#64748b', class: 'bg-slate-500' },
 ];
 
-const SettingsView: React.FC = () => {
+const SettingsView: React.FC<{ unitId: string }> = ({ unitId }) => {
     const { units, updateUnit, refreshUnits } = useUnits();
-    const currentUnitName = localStorage.getItem('SMARTCART_UNIT');
+    const currentUnitName = localStorage.getItem('SMARTCART_UNIT_NAME') || localStorage.getItem('SMARTCART_UNIT');
     const [newName, setNewName] = useState(currentUnitName || '');
     const [saving, setSaving] = useState(false);
+    const [resetting, setResetting] = useState(false);
 
-    const handleSave = async () => {
+    const handleSavePrimary = async () => {
         if (!newName.trim() || newName === currentUnitName) return;
 
         try {
             setSaving(true);
-            const unit = units.find(u => u.name === currentUnitName);
+            const unit = units.find(u => u.id === unitId);
             if (unit) {
                 await updateUnit(unit.id, { name: newName.trim() });
                 localStorage.setItem('SMARTCART_UNIT_NAME', newName.trim());
+                localStorage.setItem('SMARTCART_UNIT', newName.trim());
                 await refreshUnits();
                 alert('Nombre de la unidad actualizado correctamente');
             } else {
-                // If for some reason the unit isn't found in DB, we just update local
-                localStorage.setItem('SMARTCART_UNIT', newName.trim());
-                alert('Nombre actualizado localmente (Unidad no encontrada en BD)');
+                alert('Error: No se encontró la unidad en la base de datos.');
             }
         } catch (e: any) {
             alert('Error al actualizar: ' + e.message);
@@ -164,70 +165,142 @@ const SettingsView: React.FC = () => {
         }
     };
 
+    const handleResetContents = async () => {
+        if (!confirm('¿ESTÁS SEGURO? Esta acción vaciará TODOS los carros y ubicaciones de esta unidad. El catálogo de materiales, técnicas y usuarios permanecerán intactos.')) return;
+
+        const secondConfirm = confirm('Confirma una segunda vez: Se borrarán todas las asignaciones de stock de los carros.');
+        if (!secondConfirm) return;
+
+        try {
+            setResetting(true);
+
+            // 1. Get all location IDs for this unit
+            const { data: locations, error: locError } = await supabase
+                .from('locations')
+                .select('id')
+                .eq('unit_id', unitId);
+
+            if (locError) throw locError;
+
+            if (locations && locations.length > 0) {
+                const locationIds = locations.map(l => l.id);
+
+                // 2. Delete from cart_contents
+                const { error: delError } = await supabase
+                    .from('cart_contents')
+                    .delete()
+                    .in('location_id', locationIds);
+
+                if (delError) throw delError;
+            }
+
+            alert('Contenidos reseteados con éxito. Los carros están ahora vacíos.');
+            window.location.reload(); // Refresh to ensure all states are cleared
+        } catch (e: any) {
+            alert('Error al resetear contenidos: ' + e.message);
+        } finally {
+            setResetting(false);
+        }
+    };
+
     return (
-        <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             <div>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Ajustes de la Unidad</h2>
-                <p className="text-slate-500 dark:text-slate-400">Configuración global del servicio SMARTcart</p>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Panel de Control</h2>
+                <p className="text-slate-500 dark:text-slate-400">Configuración de la unidad y mantenimiento</p>
             </div>
 
-            <Card className="p-4 sm:p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <div className="p-3 bg-clinical-100 dark:bg-clinical-900/50 rounded-xl text-clinical-600">
-                            <Building2 size={24} />
+            {/* Current Unit & Local Settings */}
+            <section className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <Settings size={20} className="text-clinical-500" /> Identificación de la Unidad
+                </h3>
+                <Card className="p-4 sm:p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div className="p-3 bg-clinical-100 dark:bg-clinical-900/50 rounded-xl text-clinical-600">
+                                <Building2 size={24} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nombre Actual</p>
+                                <p className="text-lg font-bold text-slate-900 dark:text-white">
+                                    {currentUnitName || 'Sin nombre'}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Unidad Actual</p>
-                            <p className="text-lg font-bold text-slate-900 dark:text-white">
-                                {currentUnitName || 'Sin nombre'}
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Cambiar nombre público</label>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <input
+                                    type="text"
+                                    className="flex-1 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    placeholder="Ej: UCI A, Planta 4, Emergencias..."
+                                    value={newName}
+                                    onChange={e => setNewName(e.target.value)}
+                                />
+                                <Button onClick={handleSavePrimary} disabled={saving || !newName.trim() || newName === currentUnitName} className="whitespace-nowrap">
+                                    {saving ? 'Guardando...' : 'Actualizar Nombre'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </section>
+
+            {/* Maintenance / Reset */}
+            <section className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <Zap size={20} className="text-amber-500" /> Mantenimiento de Datos
+                </h3>
+                <Card className="p-8 border-amber-100 bg-amber-50/20 dark:bg-amber-900/5 dark:border-amber-900/30">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="space-y-2 flex-1">
+                            <h4 className="text-lg font-bold text-slate-800 dark:text-white underline decoration-amber-200">Resetear Contenidos de Carros</h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+                                Esta acción **borrará todos los materiales asignados** a los cajones y ubicaciones de esta unidad, dejándolos vacíos.
+                                Útil si quieres empezar una nueva configuración de stock desde cero.
+                            </p>
+                            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                <ShieldCheck size={14} /> El catálogo global y las técnicas NO se verán afectados.
                             </p>
                         </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Cambiar nombre de la unidad</label>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <input
-                                type="text"
-                                className="flex-1 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                                placeholder="Nuevo nombre de la unidad..."
-                                value={newName}
-                                onChange={e => setNewName(e.target.value)}
-                            />
-                            <Button onClick={handleSave} disabled={saving || !newName.trim() || newName === currentUnitName} className="whitespace-nowrap">
-                                {saving ? 'Guardando...' : 'Renombrar Globalmente'}
-                            </Button>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 px-1">
-                            * Al cambiar el nombre aquí, se actualizará en **todos** los dispositivos vinculados a esta unidad.
-                        </p>
-                    </div>
-
-                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Cambio de Unidad (este dispositivo)</label>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 px-1">
-                            Si solo quieres usar este dispositivo en otra unidad distinta sin cambiar el nombre de la actual, desvincula el dispositivo.
-                        </p>
                         <Button
                             variant="outline"
-                            className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            onClick={() => {
-                                if (confirm('¿Estás seguro de que quieres desvincular este dispositivo? Tendrás que configurarlo de nuevo.')) {
-                                    localStorage.removeItem('SMARTCART_UNIT_ID');
-                                    localStorage.removeItem('SMARTCART_UNIT_NAME');
-                                    window.location.reload();
-                                }
-                            }}
+                            onClick={handleResetContents}
+                            disabled={resetting}
+                            className="bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm whitespace-nowrap h-auto py-4 px-8"
                         >
-                            Desvincular y Configurar Nuevo
+                            {resetting ? 'Reseteando...' : 'Resetear Carros y Ubicaciones'}
                         </Button>
                     </div>
+                </Card>
+
+                <div className="pt-6">
+                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Desvincular Dispositivo (Opcional)</label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 px-1">
+                        Si este dispositivo se va a usar en un servidor o entorno diferente, usa esta opción para limpiar la memoria local.
+                    </p>
+                    <button
+                        onClick={() => {
+                            if (confirm('¿Desvincular este dispositivo? Se cerrará la sesión y se reseteará la configuración inicial.')) {
+                                localStorage.removeItem('SMARTCART_UNIT_ID');
+                                localStorage.removeItem('SMARTCART_UNIT_NAME');
+                                localStorage.removeItem('SMARTCART_UNIT');
+                                window.location.reload();
+                            }
+                        }}
+                        className="text-sm text-slate-400 hover:text-red-500 underline transition-colors"
+                    >
+                        Limpiar registro local y desvincular
+                    </button>
                 </div>
-            </Card>
+            </section>
         </div>
     );
 };
+
+
 
 const UsersView: React.FC = () => {
     const { users, loading, createUser, deleteUser } = useUsers();
@@ -457,7 +530,7 @@ const UsersView: React.FC = () => {
 };
 
 export const AdminDashboard: React.FC<AdminProps> = (props) => {
-    const { inventory, techniques, onLogout, onRefreshInventory, createItem, updateItem, deleteItem, equipmentData, createEquipment, updateEquipment, deleteEquipment, onRefreshEquipment, createTechnique, updateTechnique, deleteTechnique, locationsData, createLocation, updateLocation, deleteLocation } = props;
+    const { inventory, unitId, techniques, onLogout, onRefreshInventory, createItem, updateItem, deleteItem, equipmentData, createEquipment, updateEquipment, deleteEquipment, onRefreshEquipment, createTechnique, updateTechnique, deleteTechnique, locationsData, createLocation, updateLocation, deleteLocation } = props;
     const [activeTab, setActiveTab] = useState<'INVENTORY' | 'TECHNIQUES' | 'LOCATIONS' | 'CART' | 'EQUIPMENT' | 'REGISTROS' | 'REGISTROS_STOCK' | 'REGISTROS_FEEDBACK' | 'SETTINGS' | 'USERS'>('INVENTORY');
     const [selectedCartId, setSelectedCartId] = useState<string | null>(null);
     const [isCartsOpen, setIsCartsOpen] = useState(true);
@@ -467,18 +540,14 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const [isTabSelectorOpen, setIsTabSelectorOpen] = useState(false);
 
     // Material Creation/Edit State - Now received from props
-    // const { createItem, updateItem, deleteItem } = useItems();
+    // const {createItem, updateItem, deleteItem} = useItems();
     const [isCreating, setIsCreating] = useState(false);
     const [editingItem, setEditingItem] = useState<Item | null>(null);
     const [viewingItem, setViewingItem] = useState<Item | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('table'); // Default to table as requested
     const [newItem, setNewItem] = useState<Partial<Item>>({
         name: '',
-        stockIdeal: 0,
-        location: '',
         category: 'material',
-        locationType: 'CART',
-        ubicacion_secundaria: 'Almacén General',
         referencia_petitorio: ''
     });
     const [selectedParentLocation, setSelectedParentLocation] = useState<string>('');
@@ -487,10 +556,10 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
     // Generic Cart Hook for the CURRENTLY selected cart
     const activeCartHook = useCartItems(selectedCartId || '');
-    const { revisions, loading: loadingRevisions, refreshRevisions } = useStockRevisions();
+    const { revisions, loading: loadingRevisions, refreshRevisions } = useStockRevisions(unitId);
 
     // Global items for "Available In" check
-    const globalCartItems = useGlobalCartItems();
+    const globalCartItems = useGlobalCartItems(unitId);
 
     // AI Text Correction Helper
     const handleBlurCorrection = async (text: string, setter: (val: string) => void) => {
@@ -517,7 +586,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     };
 
     // Locations State - Now received from props
-    // const { locations: savedLocations, createLocation, deleteLocation, updateLocation } = useLocations();
+    // const {locations: savedLocations, createLocation, deleteLocation, updateLocation } = useLocations();
     const savedLocations = locationsData;
     const [newLocation, setNewLocation] = useState({ name: '', type: 'CART' as 'CART' | 'WAREHOUSE' | 'EXTERNAL', parentId: '' });
     const [colorSelectionModal, setColorSelectionModal] = useState<{ isOpen: boolean; pendingLocation: { name: string, type: 'CART' | 'WAREHOUSE' | 'EXTERNAL', parentId: string } | null }>({ isOpen: false, pendingLocation: null });
@@ -538,7 +607,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     };
 
     // Equipment State - Now received from props
-    // const { equipment, createEquipment, updateEquipment, deleteEquipment, refreshEquipment } = useEquipment();
+    // const {equipment, createEquipment, updateEquipment, deleteEquipment, refreshEquipment} = useEquipment();
     const equipment = equipmentData;
     const refreshEquipment = onRefreshEquipment;
     const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
@@ -554,8 +623,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     });
 
     // Incidents & Feedbacks State
-    const { incidents, loading: loadingIncidents, fetchIncidents } = useIncidents();
-    const { feedbacks, loading: loadingFeedbacks, fetchFeedbacks } = useFeedbacks();
+    const { incidents, loading: loadingIncidents, fetchIncidents } = useIncidents(unitId);
+    const { feedbacks, loading: loadingFeedbacks, fetchFeedbacks } = useFeedbacks(unitId);
 
 
 
@@ -672,7 +741,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         targetLocationId: '',
         targetLocationName: '',
         cartType: null,
-        selectedItems: {}, // { itemId: { stockIdeal: 1, nextExpiryDate: '' } }
+        selectedItems: {}, // {itemId: {stockIdeal: 1, nextExpiryDate: '' } }
         searchTerm: ''
     });
 
@@ -748,7 +817,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     });
 
     // Technique Creation/Edit State - Now received from props
-    // const { techniques: liveTechniques, createTechnique, updateTechnique, deleteTechnique } = useTechniques();
+    // const {techniques: liveTechniques, createTechnique, updateTechnique, deleteTechnique } = useTechniques();
     const liveTechniques = techniques;
     const [newTechnique, setNewTechnique] = useState<{ name: string; description: string; protocolUrl: string; cartIds: string[] }>({ name: '', description: '', protocolUrl: '', cartIds: [] });
     const [uploadingProtocol, setUploadingProtocol] = useState(false);
@@ -1024,11 +1093,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const resetItemForm = () => {
         setNewItem({
             name: '',
-            stockIdeal: 10,
-            location: '',
             category: 'General',
-            locationType: 'CART',
-            ubicacion_secundaria: '',
             referencia_petitorio: ''
         });
         setImagePreview(null);
@@ -1040,29 +1105,14 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const handleEditItem = (item: Item) => {
         setEditingItem(item);
 
-        // Find location by Name (legacy) or ID (future)
-        const foundLoc = savedLocations.find(l => l.name === item.ubicacion || l.id === item.ubicacion);
-
-        let locId = item.ubicacion;
-        let parentId = '';
-
-        if (foundLoc) {
-            locId = foundLoc.id;
-            parentId = foundLoc.parent_id || '';
-        }
-
         setNewItem({
             name: item.name,
-            stockIdeal: item.stockIdeal,
-            location: locId,
             category: item.category,
-            locationType: item.locationType,
-            ubicacion_secundaria: item.ubicacion_secundaria || 'Almacén General',
             referencia_petitorio: item.referencia_petitorio || ''
         });
         setImagePreview(item.imageUrl);
         setIsCreating(true);
-        setSelectedParentLocation(parentId);
+        // setSelectedParentLocation(parentId); // No longer needed
     };
 
     const handleDeleteItem = (id: string) => {
@@ -1071,8 +1121,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
 
     const handleSaveMaterial = async () => {
-        if (!newItem.name || !newItem.location) {
-            alert('Por favor rellena el nombre y la ubicación');
+        if (!newItem.name) {
+            alert('Por favor rellena el nombre');
             return;
         }
 
@@ -1099,29 +1149,21 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
 
             // AI Auto-generation disabled by user request due to billing quota.
-            // if (!finalImage && newItem.name) { ... }
+            // if (!finalImage && newItem.name) {... }
 
             if (editingItem) {
                 await updateItem(editingItem.id, {
                     name: finalName,
-                    stockIdeal: newItem.stockIdeal,
-                    ubicacion: newItem.location,
                     category: newItem.category,
-                    locationType: newItem.locationType,
                     imageUrl: finalImage || editingItem.imageUrl,
-                    ubicacion_secundaria: newItem.ubicacion_secundaria,
                     referencia_petitorio: newItem.referencia_petitorio
                 });
                 // alert('Material actualizado correctamente');
             } else {
                 await createItem({
                     name: finalName,
-                    stockIdeal: newItem.stockIdeal,
-                    ubicacion: newItem.location,
                     category: newItem.category,
-                    locationType: newItem.locationType,
                     imageUrl: finalImage || '',
-                    ubicacion_secundaria: newItem.ubicacion_secundaria || 'Almacén General',
                     referencia_petitorio: newItem.referencia_petitorio || ''
                 });
             }
@@ -1327,6 +1369,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     >
                         <Users size={18} /> Usuarios
                     </button>
+
 
                     {/* 7. Ajustes */}
                     <button
@@ -1847,12 +1890,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                 <p className="text-slate-500 dark:text-slate-400">{viewingItem.category}</p>
                                             </div>
 
-                                            {viewingItem.ubicacion_secundaria && (
-                                                <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-100 dark:border-amber-900">
-                                                    <p className="text-xs text-amber-600 dark:text-amber-400 uppercase font-semibold mb-1">Ubicación Stock</p>
-                                                    <p className="font-medium text-amber-900 dark:text-amber-100">{viewingItem.ubicacion_secundaria}</p>
-                                                </div>
-                                            )}
+
 
                                             {viewingItem.referencia_petitorio && (
                                                 <div className="bg-clinical-50 dark:bg-clinical-900/20 p-3 rounded-lg border border-clinical-100 dark:border-clinical-800">
@@ -2007,28 +2045,6 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         )}
                                                     </div>
                                                 </th>
-                                                <th
-                                                    className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden lg:table-cell"
-                                                    onClick={() => handleSort('ubicacion_secundaria')}
-                                                >
-                                                    <div className="flex items-center gap-1">
-                                                        Almacén
-                                                        {sortConfig.key === 'ubicacion_secundaria' && (
-                                                            <span className="text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                                                        )}
-                                                    </div>
-                                                </th>
-                                                <th
-                                                    className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden sm:table-cell"
-                                                    onClick={() => handleSort('ubicacion')}
-                                                >
-                                                    <div className="flex items-center gap-1">
-                                                        Localización
-                                                        {sortConfig.key === 'ubicacion' && (
-                                                            <span className="text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                                                        )}
-                                                    </div>
-                                                </th>
                                                 <th className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Pet.</th>
                                                 <th className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Acc.</th>
                                             </tr>
@@ -2062,19 +2078,6 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                     </div>
                                                                 )}
                                                                 <span className="font-medium text-slate-900 dark:text-slate-200 max-w-[120px] sm:max-w-none truncate">{item.name}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400 hidden lg:table-cell">
-                                                            {(() => {
-                                                                const loc = savedLocations.find(l => l.id === item.ubicacion || l.name === item.ubicacion);
-                                                                const parent = loc?.parent_id ? savedLocations.find(l => l.id === loc.parent_id) : null;
-                                                                return parent?.name || item.ubicacion_secundaria || <span className="text-slate-400 italic">No asignada</span>;
-                                                            })()}
-                                                        </td>
-                                                        <td className="px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400 hidden sm:table-cell">
-                                                            <div className="flex items-center gap-1">
-                                                                <MapPin size={14} className="text-clinical-400" />
-                                                                {savedLocations.find(l => l.id === item.ubicacion || l.name === item.ubicacion)?.name || item.ubicacion || <span className="text-slate-400 italic">--</span>}
                                                             </div>
                                                         </td>
                                                         <td className="px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400 font-mono text-xs">
@@ -2176,41 +2179,10 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                 />
                                             </div>
 
-                                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación General</label>
-                                                    <select
-                                                        className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                                                        value={selectedParentLocation}
-                                                        onChange={e => {
-                                                            setSelectedParentLocation(e.target.value);
-                                                            setNewItem({ ...newItem, location: '' }); // Reset child when parent changes
-                                                        }}
-                                                    >
-                                                        <option value="">Selecciona zona...</option>
-                                                        {savedLocations.filter(l => !l.parent_id && l.type !== 'CART').map(l => (
-                                                            <option key={l.id} value={l.id}>{l.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Espacio concreto</label>
-                                                    <select
-                                                        className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:text-slate-400"
-                                                        value={newItem.location}
-                                                        onChange={e => setNewItem({ ...newItem, location: e.target.value })}
-                                                        disabled={!selectedParentLocation}
-                                                    >
-                                                        <option value="">Selecciona espacio...</option>
-                                                        {savedLocations
-                                                            .filter(l => l.parent_id === selectedParentLocation)
-                                                            .map(l => (
-                                                                <option key={l.id} value={l.id}>{l.name}</option>
-                                                            ))
-                                                        }
-                                                    </select>
-                                                </div>
-                                            </div>
+                                        </div>
+
+                                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Removed Location Selection Fields */}
                                         </div>
                                     </div>
 
@@ -2786,7 +2758,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     {activeTab === 'USERS' && <UsersView />}
 
-                    {activeTab === 'SETTINGS' && <SettingsView />}
+
+                    {activeTab === 'SETTINGS' && <SettingsView unitId={unitId} />}
 
                     {
                         ['REGISTROS', 'REGISTROS_STOCK', 'REGISTROS_FEEDBACK'].includes(activeTab) && (

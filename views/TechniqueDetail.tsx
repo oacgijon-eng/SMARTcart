@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PageHeader, Button, Card, Modal } from '../components/UI';
-import { Technique, LocationType, Item } from '../types';
+import { Technique, Item } from '../types';
 import { FileText, MapPin, AlertTriangle, ArrowRight, Box, Monitor, Check, Search } from 'lucide-react';
 
 import { Location, CartItem } from '../types';
@@ -42,30 +42,28 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
     const resolvedLocations: { name: string; color: string }[] = [];
 
     // Process all found locations to build unified list
-    if (fullItem?.locationType === LocationType.CART) {
-      cartItems.forEach((cItem) => {
-        const drawer = locations.find(l => l.id === cItem.locationId);
+    cartItems.forEach((cItem) => {
+      const drawer = locations.find(l => l.id === cItem.locationId);
 
-        if (drawer) {
-          let locString = drawer.name;
-          let cartId = drawer.id;
-          let locColor = drawer.color || '#0ea5e9'; // Default Blue
+      if (drawer) {
+        let locString = drawer.name;
+        let cartId = drawer.id;
+        let locColor = drawer.color || '#0ea5e9'; // Default Blue
 
-          if (drawer.parent_id) {
-            const cart = locations.find(l => l.id === drawer.parent_id);
-            if (cart) {
-              locString = `${cart.name} - ${drawer.name}`;
-              cartId = cart.id;
-              locColor = cart.color || locColor;
-            }
+        if (drawer.parent_id) {
+          const cart = locations.find(l => l.id === drawer.parent_id);
+          if (cart) {
+            locString = `${cart.name} - ${drawer.name}`;
+            cartId = cart.id;
+            locColor = cart.color || locColor;
           }
-
-          resolvedLocations.push({ name: locString, color: locColor });
-          // Keep track of one cart ID for the header summary (allows multiple but simplified here)
-          if (!associatedCartId) associatedCartId = cartId;
         }
-      });
-    }
+
+        resolvedLocations.push({ name: locString, color: locColor });
+        // Keep track of one cart ID for the header summary (allows multiple but simplified here)
+        if (!associatedCartId) associatedCartId = cartId;
+      }
+    });
 
     return { ...kitItem, item: fullItem, resolvedLocations, associatedCartId };
   });
@@ -127,7 +125,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
         {technique.description && (
           <div className="mb-8">
             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Descripción</h3>
-            <p className="text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
               {technique.description}
             </p>
 
@@ -155,7 +153,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                 ))}
             </div>
           </div>
-        ) : (hydratedItems.some(i => i.item?.locationType === LocationType.CART) && (
+        ) : (hydratedItems.some(i => i.resolvedLocations && i.resolvedLocations.length > 0) && (
           <div className="mb-8">
             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Carros Necesarios</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -229,7 +227,11 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
             const item = kitItem.item;
             if (!item) return null;
 
-            const isExternal = item.locationType === LocationType.EXTERNAL;
+
+
+            // External/Warehouse detection logic is removed as fields are gone.
+            // We rely on resolvedLocations to know if it is in a cart.
+            const isExternal = false; // Default to false as we don't know
             const toUseItem = item;
             const isChecked = checkedItems.has(toUseItem.id);
 
@@ -262,49 +264,36 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                 <div className={`flex-1 p-4 flex flex-col justify-center relative transition-all ${isChecked ? 'bg-green-50/30 dark:bg-green-950/10' : ''}`}>
                   <div className="flex justify-between items-start mb-0">
                     <div>
-                      <h4 className={`font-bold text-lg text-slate-900 dark:text-white transition-colors ${isChecked ? 'text-green-800 dark:text-green-300' : ''}`}>{item.name}</h4>
+                      <h4 className={`font-bold text-base sm:text-lg text-slate-900 dark:text-white transition-colors ${isChecked ? 'text-green-800 dark:text-green-300' : ''}`}>{item.name}</h4>
                     </div>
-                    <div className="flex flex-col items-end mr-2">
-                      <span className={`text-2xl font-bold transition-colors ${isChecked ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>x{kitItem.quantity}</span>
-
-                      <span className="text-xs text-slate-400">unidades</span>
+                    <div className="flex flex-col items-end mr-1 sm:mr-2">
+                      <span className={`text-xl sm:text-2xl font-bold transition-colors ${isChecked ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>x{kitItem.quantity}</span>
+                      <span className="text-[10px] text-slate-400">unids</span>
                     </div>
                   </div>
 
                   {/* Location Badge */}
                   <div className={`flex flex-col items-start gap-1 mt-0 transition-opacity ${isChecked ? 'opacity-60' : 'opacity-100'}`}>
-                    {isExternal ? (
-                      <div className="flex items-center gap-2 text-alert-600 dark:text-alert-400 bg-white dark:bg-slate-800/80 px-3 py-0.5 rounded-lg border border-alert-100 dark:border-alert-900 shadow-sm w-full md:w-auto">
-
-                        <AlertTriangle size={18} />
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold uppercase">Ubicación Externa</span>
-                          <span className="font-semibold">{item.warehouseLocation}</span>
+                    {kitItem.resolvedLocations && kitItem.resolvedLocations.length > 0 ? (
+                      kitItem.resolvedLocations.map((loc, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 px-3 py-0.5 rounded-lg w-full md:w-auto"
+                          style={{
+                            color: loc.color,
+                            backgroundColor: `${loc.color}15` // 15 = approx 8% opacity
+                          }}
+                        >
+                          <MapPin size={18} style={{ color: loc.color }} />
+                          <span className="font-semibold">{loc.name}</span>
                         </div>
-                      </div>
+                      ))
                     ) : (
-                      item.locationType === LocationType.CART && kitItem.resolvedLocations && kitItem.resolvedLocations.length > 0 ? (
-                        kitItem.resolvedLocations.map((loc, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-2 px-3 py-0.5 rounded-lg w-full md:w-auto"
-                            style={{
-                              color: loc.color,
-                              backgroundColor: `${loc.color}15` // 15 = approx 8% opacity
-                            }}
-                          >
-                            <MapPin size={18} style={{ color: loc.color }} />
-                            <span className="font-semibold">{loc.name}</span>
-                          </div>
-                        ))
-                      ) : (
-                        // Fallback for weird state or purely generic generic
-                        <div className="flex items-center gap-2 text-clinical-700 dark:text-clinical-300 bg-clinical-50 dark:bg-clinical-900/20 px-3 py-0.5 rounded-lg w-full md:w-auto">
-
-                          <MapPin size={18} />
-                          <span className="font-semibold">{item.ubicacion || 'Ubicación Desconocida'}</span>
-                        </div>
-                      )
+                      // Fallback for items with no resolved location (Missing or External unknown)
+                      <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-0.5 rounded-lg w-full md:w-auto border border-slate-200 dark:border-slate-700">
+                        <MapPin size={18} />
+                        <span className="font-semibold">Ubicación no disponible</span>
+                      </div>
                     )}
                   </div>
 
@@ -342,20 +331,21 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
       </div >
 
       {/* Sticky Bottom Action */}
-      <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30">
-        <div className="max-w-4xl mx-auto space-y-4">
+      <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-4xl mx-auto space-y-2">
 
           <Button
             onClick={() => setIsSearchOpen(true)}
             fullWidth
+            size="sm"
             variant="outline"
-            className="flex justify-center items-center gap-2 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+            className="flex justify-center items-center gap-2 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 h-10"
           >
 
-            <Search size={20} />
+            <Search size={18} />
             <span>¿Necesitas más material?</span>
           </Button>
-          <Button onClick={onStartRestock} fullWidth size="lg" className="flex justify-between items-center group">
+          <Button onClick={onStartRestock} fullWidth size="lg" className="flex justify-between items-center group h-12">
             <span>Finalizar y Reponer</span>
             <ArrowRight className="opacity-70 group-hover:translate-x-1 transition-transform" />
           </Button>
@@ -401,15 +391,17 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                       return `${parent.name} - ${loc.name}`;
                     }
 
-                    // Fallback for legacy or direct assignment
-                    return loc?.name || selectedItem.ubicacion || 'No asignado';
+                    // Fallback for legacy
+                    return loc?.name || 'No asignado';
                   })()}
                 </p>
+                {/* Warehouse Location Info removed because we don't have secondary locations anymore */}
+                {/* 
                 {selectedItem.ubicacion_secundaria && selectedItem.ubicacion_secundaria !== 'Almacén General' && !locations.find(l => l.id === selectedItem.ubicacion)?.parent_id && (
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                     {selectedItem.ubicacion_secundaria}
                   </p>
-                )}
+                )} */}
 
               </div>
 

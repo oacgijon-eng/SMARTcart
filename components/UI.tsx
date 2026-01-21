@@ -77,7 +77,7 @@ export const Badge: React.FC<{ children: React.ReactNode; color?: 'blue' | 'oran
 
 export const PageHeader: React.FC<{ title: string; subtitle?: string; onBack?: () => void; action?: React.ReactNode }> = ({ title, subtitle, onBack, action }) => {
   return (
-    <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20 px-4 py-4 md:px-6 md:py-5 flex items-center justify-between shadow-sm">
+    <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20 px-4 pb-4 md:px-6 md:py-5 flex items-center justify-between shadow-sm pt-[calc(1rem+env(safe-area-inset-top))]">
 
       <div className="flex items-center gap-4">
         {onBack && (
