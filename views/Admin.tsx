@@ -2364,7 +2364,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                     <input
                                                         type="file"
                                                         accept="image/*"
-                                                        // capture="environment" // REMOVED: Direct camera crashes this device (OOM)
+                                                        capture="environment"
                                                         className="hidden"
                                                         ref={cameraInputRef}
                                                         onChange={handleImageChange}
