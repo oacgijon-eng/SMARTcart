@@ -3466,7 +3466,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                     type="date"
                                                                     value={data.nextExpiryDate}
                                                                     onChange={e => updateSelectedMaterial(itemId, 'nextExpiryDate', e.target.value)}
-                                                                    className="w-full h-8 border border-slate-200 dark:border-slate-700 rounded px-2 text-xs outline-none focus:border-clinical-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                                                    className="w-full max-w-[150px] h-8 border border-slate-200 dark:border-slate-700 rounded px-2 text-xs outline-none focus:border-clinical-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                                                 />
                                                             </div>
                                                         )}
