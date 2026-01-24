@@ -602,6 +602,27 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const [sortConfig, setSortConfig] = useState<{ key: keyof Item; direction: 'asc' | 'desc' }>({ key: 'name', direction: 'asc' });
 
     // Helper to upload base64 images to Supabase Storage
+    const handleStorageDebug = async () => {
+        try {
+            alert("Iniciando prueba de conexión con Storage...");
+            const fileName = `debug_${Date.now()}.txt`;
+            const { data, error } = await supabase.storage
+                .from('images')
+                .upload(fileName, new Blob(['test'], { type: 'text/plain' }));
+
+            if (error) {
+                console.error("DEBUG STORAGE ERROR:", error);
+                alert(`ERROR CRÍTICO STORAGE:\n${error.message}\nCodigo: ${error.cause || 'N/A'}`);
+            } else {
+                alert(`¡ÉXITO! Archivo subido correctamente.\nPath: ${data.path}`);
+                // Cleanup
+                // await supabase.storage.from('images').remove([fileName]);
+            }
+        } catch (e: any) {
+            alert(`EXCEPCIÓN LOCAL: ${e.message}`);
+        }
+    };
+
     const uploadImageToStorage = async (base64Data: string): Promise<string | null> => {
         try {
             // Convert Base64 to Blob
@@ -1415,6 +1436,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 <Button variant="ghost" size="sm" onClick={onLogout} className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700">
                     <LogOut size={16} /> Salir
                 </Button>
+                <div className="hidden md:block ml-2">
+                    <button onClick={handleStorageDebug} className="text-xs text-blue-500 underline">Probar Storage</button>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative w-full">
