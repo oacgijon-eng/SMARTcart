@@ -405,36 +405,47 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
               </div>
 
               <div className="bg-clinical-50 dark:bg-clinical-900/10 border border-clinical-100 dark:border-clinical-800 rounded-xl p-6 flex flex-col gap-2 text-center items-center">
-                <div className="flex items-center gap-2 text-clinical-600 dark:text-clinical-400 mb-1">
-                  <MapPin size={20} />
-                  <label className="text-sm font-bold uppercase tracking-widest">Ubicación en Almacén</label>
+                <div className="flex flex-col items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 text-clinical-600 dark:text-clinical-400">
+                    <MapPin size={20} />
+                    <label className="text-sm font-bold uppercase tracking-widest">Ubicación en Almacén</label>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                <div className="w-full space-y-2 text-center">
                   {(() => {
-                    // Find all recorded locations for this item in warehouse/external locations
-                    // We look for any link where the location is NOT a primary cart location (or simply find first match)
                     const itemLinks = cartContents.filter(ci => ci.itemId === selectedItem.id);
 
-                    // Try to find a location that is NOT a cart, or just use the first available link
-                    // Since materials are now linked to sub-locations, we look for that hierarchy
-                    const link = itemLinks[0]; // Simplified: use first known location
-                    if (!link) return 'No asignado';
+                    const replenishmentLocs = itemLinks.map(link => {
+                      const loc = locations.find(l => l.id === link.locationId);
+                      if (!loc) return null;
 
-                    const loc = locations.find(l => l.id === link.locationId);
-                    const parent = loc?.parent_id ? locations.find(l => l.id === loc.parent_id) : null;
+                      // Recursively find if it belongs to a CART
+                      const isCartLocation = (l: any): boolean => {
+                        if (l.type === 'CART') return true;
+                        if (l.parent_id) {
+                          const parent = locations.find(p => p.id === l.parent_id);
+                          return parent ? isCartLocation(parent) : false;
+                        }
+                        return false;
+                      };
 
-                    if (parent && loc) {
-                      return `${parent.name} - ${loc.name}`;
+                      if (isCartLocation(loc)) return null;
+
+                      const parent = loc.parent_id ? locations.find(p => p.id === loc.parent_id) : null;
+                      return parent ? `${parent.name} - ${loc.name}` : loc.name;
+                    }).filter(Boolean);
+
+                    if (replenishmentLocs.length === 0) {
+                      return <p className="text-2xl font-bold text-slate-400 dark:text-slate-500 italic">No asignado en almacén</p>;
                     }
 
-                    return loc?.name || 'No asignado';
+                    return replenishmentLocs.map((locName, i) => (
+                      <p key={i} className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {locName}
+                      </p>
+                    ));
                   })()}
-                </p>
-                {selectedItem.ubicacion_secundaria && selectedItem.ubicacion_secundaria !== 'Almacén General' && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    {selectedItem.ubicacion_secundaria}
-                  </p>
-                )}
+                </div>
 
               </div>
 
