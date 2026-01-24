@@ -2072,7 +2072,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             )}
 
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                                <h2 className="text-lg font-bold">Listado de Materiales [ACTUALIZADO]</h2>
+                                <h2 className="text-lg font-bold">Listado de Materiales</h2>
                                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full md:w-auto">
                                     <div className="relative flex-1 md:w-64">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
