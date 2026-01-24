@@ -1484,17 +1484,17 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                 activeTab === 'USERS' ? 'Usuarios' :
                                                     activeTab === 'SETTINGS' ? 'Ajustes' :
                                                         activeTab === 'REGISTROS_STOCK' ? 'Stock' :
-                                                            activeTab === 'REGISTROS_FEEDBACK' ? 'Feedback' : 'Admin'}
+                                                            activeTab === 'REGISTROS_FEEDBACK' ? 'Feedback' : 'Panel de Control'}
                         </h1>
 
                     </div>
-                    <h1 className="hidden md:block text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate">Admin</h1>
+                    <h1 className="hidden md:block text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate">Panel de Control</h1>
                 </div>
                 <Button variant="ghost" size="sm" onClick={onLogout} className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700">
                     <LogOut size={16} /> Salir
                 </Button>
                 <div className="hidden md:block ml-2">
-                    <button onClick={handleStorageDebug} className="text-xs text-blue-500 underline">Probar Storage</button>
+
                 </div>
             </div>
 
