@@ -11,6 +11,7 @@ interface StockRevisionProps {
     inventory: Item[];
     cartContents: CartItem[];
     onRefresh?: () => void;
+    unitId?: string;
 }
 
 const getExpiryStatus = (locationId: string, locations: Location[], cartContents: CartItem[]) => {
@@ -41,7 +42,7 @@ const getExpiryStatus = (locationId: string, locations: Location[], cartContents
     return status;
 };
 
-export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations, inventory, cartContents, onRefresh }) => {
+export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations, inventory, cartContents, onRefresh, unitId }) => {
     const [step, setStep] = useState<1 | 2>(1);
     const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
     const [reviewerName, setReviewerName] = useState('');
@@ -156,7 +157,8 @@ export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations,
                     location_id: selectedLocationId,
                     reviewer_name: reviewerName,
                     notes: notes,
-                    expiry_checked: expiryChecked
+                    expiry_checked: expiryChecked,
+                    unit_id: unitId
                 }]);
 
             if (error) throw error;
@@ -439,7 +441,7 @@ export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations,
                                 <Button
                                     onClick={handleSubmit}
                                     fullWidth
-                                    disabled={!reviewerName.trim() || submitting || !expiryChecked}
+                                    disabled={!reviewerName.trim() || submitting}
                                     className="justify-center"
                                 >
                                     {submitting ? 'Guardando...' : 'Confirmar Revisión'}

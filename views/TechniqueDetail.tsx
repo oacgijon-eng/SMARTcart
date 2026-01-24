@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { PageHeader, Button, Card, Modal } from '../components/UI';
 import { Technique, Item } from '../types';
-import { FileText, MapPin, AlertTriangle, ArrowRight, Box, Monitor, Check, Search } from 'lucide-react';
+import { FileText, MapPin, ArrowRight, Box, Monitor, Check, Search } from 'lucide-react';
+import { useIncidents } from '../hooks/useIncidents';
 
 import { Location, CartItem } from '../types';
 
@@ -12,9 +13,11 @@ interface TechniqueDetailProps {
   cartContents: CartItem[];
   onBack: () => void;
   onStartRestock: () => void;
+  unitId?: string;
 }
 
-export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inventory, locations, cartContents, onBack, onStartRestock }) => {
+export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inventory, locations, cartContents, onBack, onStartRestock, unitId }) => {
+  const { createIncident } = useIncidents(unitId);
   // Checklist State
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
@@ -30,47 +33,72 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
     });
   };
 
-  // Hydrate items with full details from inventory AND cart location
-  const hydratedItems = technique.items.map(kitItem => {
-    const fullItem = inventory.find(i => i.id === kitItem.itemId);
+  // 1. Determine which carts are relevant for this technique (Defined in technique OR derived from items)
+  const finalCartIds = React.useMemo(() => {
+    if (technique.cartIds && technique.cartIds.length > 0) return technique.cartIds;
 
-
-    // Find ALL items in cart contents
-    const cartItems = cartContents.filter(ci => ci.itemId === kitItem.itemId);
-
-    let associatedCartId: string | undefined;
-    const resolvedLocations: { name: string; color: string }[] = [];
-
-    // Process all found locations to build unified list
-    cartItems.forEach((cItem) => {
-      const drawer = locations.find(l => l.id === cItem.locationId);
-
-      if (drawer) {
-        let locString = drawer.name;
-        let cartId = drawer.id;
-        let locColor = drawer.color || '#0ea5e9'; // Default Blue
-
-        if (drawer.parent_id) {
-          const cart = locations.find(l => l.id === drawer.parent_id);
-          if (cart) {
-            locString = `${cart.name} - ${drawer.name}`;
-            cartId = cart.id;
-            locColor = cart.color || locColor;
-          }
+    const derived = new Set<string>();
+    technique.items.forEach(kitItem => {
+      const cartItems = cartContents.filter(ci => ci.itemId === kitItem.itemId);
+      cartItems.forEach(cItem => {
+        const drawer = locations.find(l => l.id === cItem.locationId);
+        if (drawer) {
+          const cartId = drawer.parent_id || drawer.id;
+          derived.add(cartId);
         }
-
-        resolvedLocations.push({ name: locString, color: locColor });
-        // Keep track of one cart ID for the header summary (allows multiple but simplified here)
-        if (!associatedCartId) associatedCartId = cartId;
-      }
+      });
     });
+    return Array.from(derived);
+  }, [technique, cartContents, locations]);
 
-    return { ...kitItem, item: fullItem, resolvedLocations, associatedCartId };
-  });
+  // 2. Hydrate items with full details and prioritized locations
+  const hydratedItems = React.useMemo(() => {
+    return technique.items.map(kitItem => {
+      const fullItem = inventory.find(i => i.id === kitItem.itemId);
+      const cartItems = cartContents.filter(ci => ci.itemId === kitItem.itemId);
 
-  // Derive unique carts from items
-  const derivedCartIds = Array.from(new Set(hydratedItems.map(i => i.associatedCartId).filter(Boolean))) as string[];
-  const finalCartIds = (technique.cartIds && technique.cartIds.length > 0) ? technique.cartIds : derivedCartIds;
+      // Resolve all available locations first
+      const allResolvedLocations: { name: string; color: string; type: string; cartId: string }[] = [];
+
+      cartItems.forEach((cItem) => {
+        const drawer = locations.find(l => l.id === cItem.locationId);
+        if (drawer) {
+          let locString = drawer.name;
+          let cartId = drawer.id;
+          let locColor = drawer.color || '#0ea5e9';
+          let locType = (drawer.type as string);
+
+          if (drawer.parent_id) {
+            const cart = locations.find(l => l.id === drawer.parent_id);
+            if (cart) {
+              locString = `${cart.name} - ${drawer.name}`;
+              cartId = cart.id;
+              locColor = cart.color || locColor;
+              locType = (cart.type as string) || locType;
+            }
+          }
+          allResolvedLocations.push({ name: locString, color: locColor, type: locType, cartId });
+        }
+      });
+
+      // Filter Strategy:
+      // 1. Try to find locations that are in the SELECTED carts for this technique
+      let filteredLocations = allResolvedLocations.filter(loc => finalCartIds.includes(loc.cartId));
+
+      // 2. Fallback: If not in any required cart, show any other CART locations
+      if (filteredLocations.length === 0) {
+        filteredLocations = allResolvedLocations.filter(loc => loc.type === 'CART');
+      }
+
+      // 3. Fallback: If still nothing, show everything (Warehouse/External)
+      const resolvedLocations = filteredLocations.length > 0 ? filteredLocations : allResolvedLocations;
+
+      // Extract one representative cartId for background logic (if needed)
+      const associatedCartId = resolvedLocations.find(l => l.type === 'CART')?.cartId;
+
+      return { ...kitItem, item: fullItem, resolvedLocations, associatedCartId };
+    });
+  }, [technique, inventory, cartContents, locations, finalCartIds]);
 
   // Warehouse Modal State
   const [isWarehouseOpen, setIsWarehouseOpen] = useState(false);
@@ -383,25 +411,30 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                 </div>
                 <p className="text-2xl font-bold text-slate-900 dark:text-white">
                   {(() => {
+                    // Find all recorded locations for this item in warehouse/external locations
+                    // We look for any link where the location is NOT a primary cart location (or simply find first match)
+                    const itemLinks = cartContents.filter(ci => ci.itemId === selectedItem.id);
 
-                    const loc = locations.find(l => l.id === selectedItem.ubicacion || l.name === selectedItem.ubicacion);
+                    // Try to find a location that is NOT a cart, or just use the first available link
+                    // Since materials are now linked to sub-locations, we look for that hierarchy
+                    const link = itemLinks[0]; // Simplified: use first known location
+                    if (!link) return 'No asignado';
+
+                    const loc = locations.find(l => l.id === link.locationId);
                     const parent = loc?.parent_id ? locations.find(l => l.id === loc.parent_id) : null;
 
                     if (parent && loc) {
                       return `${parent.name} - ${loc.name}`;
                     }
 
-                    // Fallback for legacy
                     return loc?.name || 'No asignado';
                   })()}
                 </p>
-                {/* Warehouse Location Info removed because we don't have secondary locations anymore */}
-                {/* 
-                {selectedItem.ubicacion_secundaria && selectedItem.ubicacion_secundaria !== 'Almacén General' && !locations.find(l => l.id === selectedItem.ubicacion)?.parent_id && (
+                {selectedItem.ubicacion_secundaria && selectedItem.ubicacion_secundaria !== 'Almacén General' && (
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                     {selectedItem.ubicacion_secundaria}
                   </p>
-                )} */}
+                )}
 
               </div>
 

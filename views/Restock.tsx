@@ -12,65 +12,56 @@ interface RestockProps {
     locations: Location[];
     cartContents: CartItem[];
     onFinish: () => void;
+    unitId?: string;
 }
 
-const getItemLocationName = (item: Item, locations: Location[]) => {
-    // Legacy location name extraction is limited now.
-    // We can try to match known carts or return generic.
-    return 'Almacén';
-};
-
-const getSpecificLocationName = (locationValue: string, locations: Location[]) => {
-    const loc = locations.find(l => l.id === locationValue);
-    return loc ? loc.name : (locationValue || '-');
-};
-
-export const Restock: React.FC<RestockProps> = ({ technique, inventory, locations, cartContents, onFinish }) => {
-    // Feedback State
-    const [rating, setRating] = useState<number>(0);
-    const [issue, setIssue] = useState<string>('');
-    const [comments, setComments] = useState<string>('');
-
-    // Checklist State
-    const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({});
-
-    // Extra Items State
+export const Restock: React.FC<RestockProps> = ({ technique, inventory, locations, cartContents, onFinish, unitId }) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [rating, setRating] = useState<number | null>(null);
+    const [issue, setIssue] = useState('');
+    const [comments, setComments] = useState('');
+    const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+    const [extraItems, setExtraItems] = useState<Record<string, number>>({});
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
-    const [extraItems, setExtraItems] = useState<{ [itemId: string]: number }>({});
 
-    // Submitting State
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const hydratedItems = React.useMemo(() => {
+        return (technique.items || []).map(ti => {
+            const item = inventory.find(i => i.id === ti.itemId);
+            const itemContents = cartContents.filter(cc => cc.itemId === ti.itemId);
 
-    // Hydrate items logic (consistent with TechniqueDetail)
-    const hydratedItems = technique.items.map(kitItem => {
-        const fullItem = inventory.find(i => i.id === kitItem.itemId);
+            const resolvedLocations = itemContents.map(cc => {
+                const loc = locations.find(l => l.id === cc.locationId);
+                const parent = loc?.parent_id ? locations.find(l => l.id === loc.parent_id) : null;
+                return {
+                    name: parent ? `${parent.name} - ${loc?.name}` : loc?.name || 'General',
+                    color: parent?.color || loc?.color || '#e2e8f0',
+                    stockIdeal: cc.stockIdeal
+                };
+            });
 
-        // Find ALL items in cart contents for this item
-        const cartItems = cartContents.filter(ci => ci.itemId === kitItem.itemId);
+            const firstLoc = itemContents[0];
+            const loc = locations.find(l => l.id === firstLoc?.locationId);
+            const parent = loc?.parent_id ? locations.find(l => l.id === loc.parent_id) : null;
 
-        const resolvedLocations: { name: string; color: string; stockIdeal: number }[] = [];
-
-        // Always process cart items to find locations
-        cartItems.forEach((cItem) => {
-            const drawer = locations.find(l => l.id === cItem.locationId);
-            if (drawer) {
-                let locString = drawer.name;
-                let locColor = drawer.color || '#0ea5e9';
-
-                if (drawer.parent_id) {
-                    const cart = locations.find(l => l.id === drawer.parent_id);
-                    if (cart) {
-                        locString = `${cart.name} - ${drawer.name}`;
-                        locColor = cart.color || locColor;
-                    }
-                }
-                resolvedLocations.push({ name: locString, color: locColor, stockIdeal: cItem.stockIdeal });
-            }
+            return {
+                ...ti,
+                item,
+                resolvedLocations,
+                stockParentName: parent?.name || 'Almacén',
+                stockSubName: loc?.name || 'General'
+            };
         });
+    }, [technique, inventory, cartContents, locations]);
 
-        return { ...kitItem, item: fullItem, resolvedLocations };
-    });
+    const getItemLocationName = (item: Item, locs: Location[]) => {
+        const itemLocs = cartContents.filter(cc => cc.itemId === item.id);
+        if (itemLocs.length === 0) return 'Sin ubicación';
+        const first = itemLocs[0];
+        const loc = locs.find(l => l.id === first.locationId);
+        const parent = loc?.parent_id ? locs.find(l => l.id === loc.parent_id) : null;
+        return parent ? `${parent.name} - ${loc?.name}` : loc?.name || 'General';
+    };
 
     const handleFinish = async () => {
         setIsSubmitting(true);
@@ -87,21 +78,31 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                     console.warn("AI Correction for feedback failed, saving original.");
                 }
             }
+            // Fallback to localStorage if prop is missing (Double safety)
+            const finalUnitId = unitId || localStorage.getItem('SMARTCART_UNIT_ID');
+
+            if (!finalUnitId) {
+                console.warn("Saving feedback without unitId!");
+                alert("Atención: No se ha detectado una unidad activa. El registro podría no guardarse correctamente.");
+            }
 
             const { data, error } = await supabase.from('feedbacks').insert([{
                 rating: rating || 0,
                 issue: issue || 'No, todo correcto',
                 comments: finalComments || '',
                 technique_id: technique.id,
+                unit_id: finalUnitId
             }]);
 
             if (error) {
                 console.error('Supabase Error saving feedback:', error);
+                alert("Error al guardar feedback: " + error.message);
             } else {
                 console.log('Feedback saved successfully:', data);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Unexpected error saving feedback:', error);
+            alert("Error inesperado al guardar feedback: " + error.message);
         } finally {
             setIsSubmitting(false);
             onFinish();
@@ -234,12 +235,12 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                                     <div className="mt-3 flex flex-col md:flex-row gap-2 md:items-center text-sm">
                                         <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">
                                             <Warehouse size={14} />
-                                            <span>{getItemLocationName(item, locations)}</span>
+                                            <span>{kitItem.stockParentName}</span>
                                         </div>
                                         <ArrowRight size={14} className="text-slate-400 hidden md:block" />
                                         <div className="flex items-center gap-1.5 text-clinical-700 dark:text-clinical-300 bg-clinical-50 dark:bg-clinical-900/20 px-2 py-1 rounded font-medium">
                                             <Box size={14} />
-                                            <span>{getSpecificLocationName('', locations)}</span>
+                                            <span>{kitItem.stockSubName}</span>
                                         </div>
 
                                     </div>

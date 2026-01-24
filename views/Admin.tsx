@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { PageHeader, Button, Card } from '../components/UI';
 import { CartView } from '../components/CartView';
 import { Item, Technique, Equipment } from '../types';
-import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck } from 'lucide-react';
+import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck, RefreshCw } from 'lucide-react';
 
 import { supabase } from '../services/supabase';
 import { Location } from '../hooks/useLocations';
@@ -551,6 +551,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         referencia_petitorio: ''
     });
     const [selectedParentLocation, setSelectedParentLocation] = useState<string>('');
+    const [selectedSubLocation, setSelectedSubLocation] = useState<string>('');
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
 
@@ -734,6 +735,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         targetLocationId: string;
         targetLocationName: string;
         cartType: 'TECHNIQUES' | 'CURES' | 'CRASH' | null;
+        locationType: 'CART' | 'WAREHOUSE' | 'EXTERNAL' | 'TECHNIQUE' | null;
         selectedItems: Record<string, { stockIdeal: number; nextExpiryDate: string }>;
         searchTerm: string;
     }>({
@@ -741,11 +743,13 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         targetLocationId: '',
         targetLocationName: '',
         cartType: null,
+        locationType: null,
         selectedItems: {}, // {itemId: {stockIdeal: 1, nextExpiryDate: '' } }
         searchTerm: ''
     });
 
-    const openAddMaterialModal = (locationId: string, locationName: string, cartType: any, existingItems: any[] = []) => {
+    const openMaterialModalNew = (locationId: string, locationName: string, cartType: any, locationType: any, existingItems: any[] = []) => {
+        console.log('openMaterialModalNew called with:', { locationId, locationName, cartType, locationType, existingItems });
         const initialSelected: Record<string, { stockIdeal: number; nextExpiryDate: string }> = {};
 
         if (existingItems && existingItems.length > 0) {
@@ -762,6 +766,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
             targetLocationId: locationId,
             targetLocationName: locationName,
             cartType,
+            locationType,
             selectedItems: initialSelected,
             searchTerm: ''
         });
@@ -793,17 +798,59 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     };
 
     const handleAddMaterialToCart = async () => {
-        if (!addMaterialData.targetLocationId) return;
+        if (!addMaterialData.targetLocationId) {
+            console.error("No targetLocationId in addMaterialData");
+            alert('Error interno: Falta ID de ubicación destino');
+            return;
+        }
 
         try {
-            if (activeCartHook) {
-                await activeCartHook.syncCartItems(
-                    addMaterialData.targetLocationId,
-                    addMaterialData.selectedItems
-                );
-                setAddMaterialData(prev => ({ ...prev, isOpen: false }));
-                return;
+            console.log("Saving to location:", addMaterialData.targetLocationId);
+
+            // 1. Delete existing for this drawer
+            const { error: delErr } = await supabase
+                .from('cart_contents')
+                .delete()
+                .eq('location_id', addMaterialData.targetLocationId);
+
+            if (delErr) {
+                console.error("Delete error:", delErr);
+                throw delErr;
             }
+
+            // 2. Insert new
+            const desiredItemIds = Object.keys(addMaterialData.selectedItems);
+            console.log("Desired items:", desiredItemIds, addMaterialData.selectedItems);
+
+            if (desiredItemIds.length > 0) {
+                const toInsert = desiredItemIds.map(itemId => ({
+                    location_id: addMaterialData.targetLocationId,
+                    item_id: itemId,
+                    stock_ideal: addMaterialData.selectedItems[itemId].stockIdeal || 1,
+                    next_expiry_date: addMaterialData.selectedItems[itemId].nextExpiryDate || null
+                }));
+                console.log("Inserting payload:", toInsert);
+
+                const { error: insErr } = await supabase.from('cart_contents').insert(toInsert);
+                if (insErr) {
+                    console.error("Insert error:", insErr);
+                    throw insErr;
+                }
+            } else {
+                console.log("No items to insert (clearing drawer)");
+            }
+
+            // 3. Refresh View
+            console.log("Refreshing view...");
+            if (activeCartHook) {
+                await activeCartHook.refresh();
+                console.log("Refresh promise resolved");
+            } else {
+                console.warn("No activeCartHook available for refresh");
+            }
+
+            // alert(`Guardado en ${addMaterialData.targetLocationName} (${addMaterialData.targetLocationId})`);
+            setAddMaterialData(prev => ({ ...prev, isOpen: false }));
         } catch (error: any) {
             console.error("Sync Error Detailed:", error);
             alert('Error al actualizar materiales: ' + (error.message || 'Error desconocido'));
@@ -1093,13 +1140,15 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const resetItemForm = () => {
         setNewItem({
             name: '',
-            category: 'General',
+            category: 'material',
             referencia_petitorio: ''
         });
         setImagePreview(null);
         setIsCreating(false);
         setEditingItem(null);
         setSelectedParentLocation('');
+        setSelectedSubLocation('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const handleEditItem = (item: Item) => {
@@ -1151,6 +1200,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
             // AI Auto-generation disabled by user request due to billing quota.
             // if (!finalImage && newItem.name) {... }
 
+            let createdItemId = '';
             if (editingItem) {
                 await updateItem(editingItem.id, {
                     name: finalName,
@@ -1158,31 +1208,82 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     imageUrl: finalImage || editingItem.imageUrl,
                     referencia_petitorio: newItem.referencia_petitorio
                 });
-                // alert('Material actualizado correctamente');
+                createdItemId = editingItem.id;
             } else {
-                await createItem({
+                const res = await createItem({
                     name: finalName,
                     category: newItem.category,
                     imageUrl: finalImage || '',
                     referencia_petitorio: newItem.referencia_petitorio || ''
                 });
+                createdItemId = res?.id;
             }
 
+            // If a location was selected, associate or update it for this material
+            if (selectedParentLocation || selectedSubLocation) {
+                // Determine the most specific location available
+                const finalLocationId = selectedSubLocation || selectedParentLocation;
+                const targetLoc = savedLocations.find(l => l.id === finalLocationId);
+
+                if (createdItemId && finalLocationId) {
+
+                    // Enforce Single Stock Location Constraint
+                    // If target is WAREHOUSE or EXTERNAL, remove item from any other WAREHOUSE/EXTERNAL location first.
+                    if (targetLoc && (targetLoc.type === 'WAREHOUSE' || targetLoc.type === 'EXTERNAL')) {
+                        console.log("Enforcing single stock location for:", targetLoc.type);
+
+                        // 1. Find existing assignments of this item to general stock
+                        const { data: conflicts } = await supabase
+                            .from('cart_contents')
+                            .select('id, locations!inner(type)')
+                            .eq('item_id', createdItemId)
+                            .in('locations.type', ['WAREHOUSE', 'EXTERNAL']);
+
+                        if (conflicts && conflicts.length > 0) {
+                            const idsToDelete = conflicts.map((c: any) => c.id);
+                            console.log("Removing conflicting stock locations:", idsToDelete);
+                            await supabase.from('cart_contents').delete().in('id', idsToDelete);
+                        }
+                    }
+
+                    // Use the top-level supabase client already imported
+                    const { error: assocError } = await supabase.from('cart_contents').upsert({
+                        item_id: createdItemId,
+                        location_id: finalLocationId,
+                        stock_ideal: 0
+                    }, { onConflict: 'location_id,item_id' });
+
+                    if (assocError) throw assocError;
+                }
+            }
+
+            // Refresh AFTER all DB operations are done
+            console.log("Saving complete. Starting refresh...");
+
+            // 1. Refresh materials list
             if (props.onRefreshInventory) {
-                props.onRefreshInventory();
+                await props.onRefreshInventory();
             }
 
-            resetItemForm();
-            setIsCreating(false); // Return to inventory table
-        } catch (e: any) {
-            console.error('Error saving material:', e);
-            if (e.message?.includes('referencia_petitorio')) {
-                alert('Error de base de datos: La columna "referencia_petitorio" no existe.\n\nPor favor, ejecuta esta consulta en el SQL Editor de Supabase:\nALTER TABLE items ADD COLUMN IF NOT EXISTS referencia_petitorio TEXT;');
-            } else {
-                alert('Error al guardar: ' + (e.message || 'Error desconocido'));
+            // 2. Refresh associations (locations)
+            if (globalCartItems.refresh) {
+                await globalCartItems.refresh();
             }
-            // Close form even on error as requested by user, to avoid "hanging"
+
+            console.log("Refresh successful. Closing form.");
+
+            // Final success feedback
+
+
             resetItemForm();
+            setIsCreating(false);
+        } catch (e: any) {
+            console.error('CRITICAL: Error saving material:', e);
+            if (e.message?.includes('ON CONFLICT')) {
+                alert('Error de base de datos: Falta una restricción necesaria para guardar ubicaciones.\n\nPor favor, ejecuta esta consulta en el SQL Editor de Supabase:\n\nALTER TABLE cart_contents ADD CONSTRAINT unique_location_item UNIQUE (location_id, item_id);');
+            } else {
+                alert('Error al guardar material: ' + (e.message || 'Error desconocido'));
+            }
         } finally {
             setUploading(false);
         }
@@ -1331,9 +1432,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     {/* 5. Registros Dropdown */}
                     <div className="border-b md:border-b-0 border-transparent">
                         <button
-                            onClick={() => setIsRegistrosOpen(!isRegistrosOpen)}
+                            onClick={() => { setIsRegistrosOpen(!isRegistrosOpen); setActiveTab('REGISTROS'); }}
                             className={`w-full flex items-center justify-between px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap
-                            ${['REGISTROS_STOCK', 'REGISTROS_FEEDBACK'].includes(activeTab) ? 'text-clinical-700 bg-clinical-50/50 dark:text-clinical-400 dark:bg-clinical-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                            ${['REGISTROS', 'REGISTROS_STOCK', 'REGISTROS_FEEDBACK'].includes(activeTab) ? 'text-clinical-700 bg-clinical-50/50 dark:text-clinical-400 dark:bg-clinical-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                         >
                             <div className="flex items-center gap-3">
                                 <ClipboardList size={18} /> Registros
@@ -1384,136 +1485,6 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 {/* Main Content Area */}
                 <div className="flex-1 p-3 sm:p-6 overflow-y-auto w-full md:w-auto">
 
-                    {/* Add Material Modal (Bulk) */}
-                    {addMaterialData.isOpen && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-sm">
-                            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-4xl w-full p-4 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200 flex flex-col h-[95vh] sm:h-auto max-h-[95vh] border dark:border-slate-800">
-                                <div className="flex justify-between items-center border-b dark:border-slate-800 pb-3 shrink-0">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Añadir al Carro (Carga Masiva)</h3>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">Ubicación: <span className="font-semibold text-clinical-600 dark:text-clinical-400">{addMaterialData.targetLocationName}</span></p>
-                                    </div>
-                                    <button onClick={() => setAddMaterialData(prev => ({ ...prev, isOpen: false }))} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                                        <X size={24} />
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 flex flex-col md:flex-row gap-4 sm:gap-6 overflow-hidden min-h-0">
-                                    {/* LEFT COLUMN: Selection */}
-                                    <div className="flex-1 flex flex-col min-h-0 md:border-r border-slate-100 dark:border-slate-800 md:pr-6">
-                                        <h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2">
-                                            <Package size={18} /> Seleccionar Materiales
-                                        </h4>
-                                        <input
-                                            type="text"
-                                            className="w-full border border-slate-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-clinical-500 outline-none"
-                                            placeholder="Buscar..."
-                                            value={addMaterialData.searchTerm}
-                                            onChange={e => setAddMaterialData(prev => ({ ...prev, searchTerm: e.target.value }))}
-                                            autoFocus
-                                        />
-                                        <div className="flex-1 overflow-y-auto space-y-1 pr-2">
-                                            {inventory
-                                                .filter(i => i.name.toLowerCase().includes(addMaterialData.searchTerm.toLowerCase()))
-                                                .map(item => {
-                                                    const isSelected = !!addMaterialData.selectedItems[item.id];
-                                                    return (
-                                                        <div
-                                                            key={item.id}
-                                                            className={`p-3 flex items-center gap-3 cursor-pointer rounded-lg border transition-all ${isSelected
-                                                                ? 'bg-clinical-50 border-clinical-500 ring-1 ring-clinical-500'
-                                                                : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300'
-                                                                }`}
-                                                            onClick={() => toggleMaterialSelection(item.id)}
-                                                        >
-                                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-clinical-600 border-clinical-600' : 'bg-white border-slate-300'}`}>
-                                                                {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
-                                                            </div>
-                                                            <img src={item.imageUrl} className="w-10 h-10 rounded bg-slate-100 object-cover" alt="" />
-                                                            <span className="text-sm font-medium text-slate-700">{item.name}</span>
-                                                        </div>
-                                                    );
-                                                })}
-                                        </div>
-                                    </div>
-
-                                    {/* RIGHT COLUMN: Configuration */}
-                                    <div className="flex-1 flex flex-col min-h-0">
-                                        <h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2">
-                                            <Settings size={18} /> Configurar Selección
-                                            <span className="text-xs bg-clinical-100 text-clinical-700 px-2 py-0.5 rounded-full">
-                                                {Object.keys(addMaterialData.selectedItems).length}
-                                            </span>
-                                        </h4>
-
-                                        {Object.keys(addMaterialData.selectedItems).length === 0 ? (
-                                            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 italic border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
-                                                <MapPin size={48} className="mb-4 opacity-20" />
-                                                <p>Selecciona materiales a la izquierda</p>
-                                            </div>
-                                        ) : (
-                                            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                                                {Object.entries(addMaterialData.selectedItems).map(([itemId, config]: [string, { stockIdeal: number; nextExpiryDate: string }]) => {
-                                                    const item = inventory.find(i => i.id === itemId);
-                                                    if (!item) return null;
-                                                    return (
-                                                        <div key={itemId} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3 relative group">
-                                                            <button
-                                                                onClick={() => toggleMaterialSelection(itemId)}
-                                                                className="absolute top-2 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                                                                title="Quitar"
-                                                            >
-                                                                <X size={16} />
-                                                            </button>
-
-                                                            <div className="flex items-center gap-3 pr-6">
-                                                                <img src={item.imageUrl} className="w-8 h-8 rounded bg-slate-100 object-cover" alt="" />
-                                                                <span className="font-medium text-slate-800 text-sm truncate">{item.name}</span>
-                                                            </div>
-
-                                                            <div className="grid grid-cols-2 gap-3">
-                                                                <div>
-                                                                    <label className="text-xs font-semibold text-slate-500 mb-1 block">Stock Ideal</label>
-                                                                    <input
-                                                                        type="number"
-                                                                        min="1"
-                                                                        className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-clinical-500 outline-none"
-                                                                        value={config.stockIdeal}
-                                                                        onChange={(e) => updateSelectedMaterial(itemId, 'stockIdeal', parseInt(e.target.value) || 1)}
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <label className="text-xs font-semibold text-slate-500 mb-1 block">Caducidad</label>
-                                                                    <input
-                                                                        type="date"
-                                                                        className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-clinical-500 outline-none"
-                                                                        value={config.nextExpiryDate}
-                                                                        onChange={(e) => updateSelectedMaterial(itemId, 'nextExpiryDate', e.target.value)}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t dark:border-slate-800 mt-auto flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-                                    <Button variant="ghost" onClick={() => setAddMaterialData(prev => ({ ...prev, isOpen: false }))}>
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        disabled={Object.keys(addMaterialData.selectedItems).length === 0}
-                                        onClick={handleAddMaterialToCart}
-                                    >
-                                        Añadir {Object.keys(addMaterialData.selectedItems).length} Materiales
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Delete Confirmation Modal (Global) */}
                     {deleteConfirmation.isOpen && (
@@ -1771,8 +1742,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             rootLocationId={selectedCartId}
                             cartItems={activeCartHook.cartItems}
                             loading={activeCartHook.loading}
-                            onAddMaterial={(locationId, locationName, cartType) => openAddMaterialModal(locationId, locationName, cartType)}
-                            onManageMaterials={(locationId, locationName, cartType, existingItems) => openAddMaterialModal(locationId, locationName, cartType, existingItems)}
+                            onManageMaterials={(locationId, locationName, cartType, existingItems) => openMaterialModalNew(locationId, locationName, cartType, 'CART', existingItems)}
                             onManageLocations={() => setActiveTab('LOCATIONS')}
                             onAddSubLocation={() => {
                                 const cart = savedLocations.find(l => l.id === selectedCartId);
@@ -1940,7 +1910,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             )}
 
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                                <h2 className="text-lg font-bold">Listado de Materiales</h2>
+                                <h2 className="text-lg font-bold">Listado de Materiales [ACTUALIZADO]</h2>
                                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full md:w-auto">
                                     <div className="relative flex-1 md:w-64">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -1968,9 +1938,12 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                             <List size={18} />
                                         </button>
                                     </div>
-                                    <Button size="sm" className="gap-2 shrink-0 px-3 sm:px-4" onClick={() => { resetItemForm(); setIsCreating(true); }}>
-                                        <Plus size={16} /> <span className="hidden sm:inline">Nuevo Material</span><span className="sm:hidden">Nuevo</span>
-                                    </Button>
+                                    <div className="flex gap-2">
+
+                                        <Button size="sm" className="gap-2 shrink-0 px-3 sm:px-4" onClick={() => { resetItemForm(); setIsCreating(true); }}>
+                                            <Plus size={16} /> <span className="hidden sm:inline">Nuevo Material</span><span className="sm:hidden">Nuevo</span>
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2031,22 +2004,45 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                 </div>
                             ) : (
                                 <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                                    <table className="w-full text-left text-sm table-fixed">
+                                        <thead className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
                                             <tr>
                                                 <th
-                                                    className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                    className="w-[30%] px-4 sm:px-6 py-4 font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                                     onClick={() => handleSort('name')}
                                                 >
-                                                    <div className="flex items-center gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <Package size={16} className="text-clinical-600 dark:text-clinical-400" />
                                                         Material
                                                         {sortConfig.key === 'name' && (
-                                                            <span className="text-xs">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                                            <span className="text-clinical-500">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
                                                         )}
                                                     </div>
                                                 </th>
-                                                <th className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400">Pet.</th>
-                                                <th className="px-4 sm:px-6 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Acc.</th>
+                                                <th className="w-[20%] px-4 sm:px-6 py-4 font-bold text-slate-700 dark:text-slate-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <MapPin size={16} className="text-clinical-600 dark:text-clinical-400" />
+                                                        Ubicación Principal
+                                                    </div>
+                                                </th>
+                                                <th className="w-[20%] px-4 sm:px-6 py-4 font-bold text-slate-700 dark:text-slate-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <MapPin size={16} className="text-clinical-600 dark:text-clinical-400" />
+                                                        Ubicación Secundaria
+                                                    </div>
+                                                </th>
+                                                <th className="w-[15%] px-4 sm:px-6 py-4 font-bold text-slate-700 dark:text-slate-200">
+                                                    <div className="flex items-center gap-2">
+                                                        <ClipboardList size={16} className="text-clinical-600 dark:text-clinical-400" />
+                                                        Petitorio
+                                                    </div>
+                                                </th>
+                                                <th className="w-[15%] px-4 sm:px-6 py-4 font-bold text-slate-700 dark:text-slate-200 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Settings size={16} className="text-clinical-600 dark:text-clinical-400" />
+                                                        Acciones
+                                                    </div>
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -2068,29 +2064,95 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 group cursor-pointer"
                                                         onClick={() => setViewingItem(item)}
                                                     >
-                                                        <td className="px-4 sm:px-6 py-3">
-                                                            <div className="flex items-center gap-3">
+                                                        <td className="px-4 sm:px-6 py-4">
+                                                            <div className="flex items-center gap-4">
                                                                 {item.imageUrl ? (
-                                                                    <img src={item.imageUrl} alt="" className="w-8 h-8 rounded object-cover bg-slate-100 dark:bg-slate-700" />
+                                                                    <div className="relative group/img">
+                                                                        <img src={item.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-700 shadow-sm transition-transform group-hover/img:scale-110" />
+                                                                    </div>
                                                                 ) : (
-                                                                    <div className="w-8 h-8 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
-                                                                        <Package size={16} />
+                                                                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 shadow-sm border border-slate-200 dark:border-slate-600">
+                                                                        <Package size={20} />
                                                                     </div>
                                                                 )}
-                                                                <span className="font-medium text-slate-900 dark:text-slate-200 max-w-[120px] sm:max-w-none truncate">{item.name}</span>
+                                                                <span className="font-semibold text-slate-900 dark:text-white max-w-[200px] truncate">{item.name}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 sm:px-6 py-3 text-slate-500 dark:text-slate-400 font-mono text-xs">
-                                                            {item.referencia_petitorio || <span className="text-slate-400 italic">--</span>}
+                                                        {(() => {
+                                                            const matches = globalCartItems.allItems.filter(ci => ci.itemId === item.id);
+                                                            const warehouseLocations = matches
+                                                                .map(m => savedLocations.find(l => l.id === m.locationId))
+                                                                .filter(l => l && l.type !== 'CART');
+
+                                                            // Determine pairs for alignment
+                                                            const locationPairs = warehouseLocations.length > 0 ? warehouseLocations.map(loc => {
+                                                                if (!loc) return { p: '?', s: '?' };
+                                                                const isSub = !!loc.parent_id;
+                                                                const parent = isSub ? savedLocations.find(p => p.id === loc.parent_id) : null;
+                                                                return {
+                                                                    principal: isSub ? (parent?.name || 'Unknown') : loc.name,
+                                                                    secondary: isSub ? loc.name : '',
+                                                                    color: isSub ? parent?.color : loc.color
+                                                                };
+                                                            }) : [];
+
+                                                            return (
+                                                                <>
+                                                                    <td className="w-[20%] px-4 sm:px-6 py-4">
+                                                                        {locationPairs.length === 0 ? (
+                                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Sin asignar</span>
+                                                                        ) : (
+                                                                            <div className="flex flex-col gap-1.5">
+                                                                                {locationPairs.map((pair, idx) => (
+                                                                                    <div key={idx} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 font-medium">
+                                                                                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: pair.color || '#94a3b8' }} />
+                                                                                        {pair.principal}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="w-[20%] px-4 sm:px-6 py-4">
+                                                                        {locationPairs.length === 0 ? (
+                                                                            <span className="text-slate-300 dark:text-slate-600">--</span>
+                                                                        ) : (
+                                                                            <div className="flex flex-col gap-1.5">
+                                                                                {locationPairs.map((pair, idx) => (
+                                                                                    <div key={idx} className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                                                                        {pair.secondary || <span className="text-slate-300 dark:text-slate-600">--</span>}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </td>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                        <td className="w-[15%] px-4 sm:px-6 py-4">
+                                                            {item.referencia_petitorio ? (
+                                                                <span className="px-2 py-1 bg-clinical-50 dark:bg-clinical-900/30 text-clinical-700 dark:text-clinical-400 rounded-md font-mono text-xs border border-clinical-100 dark:border-clinical-800/50">
+                                                                    {item.referencia_petitorio}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-slate-300 dark:text-slate-600 italic">--</span>
+                                                            )}
                                                         </td>
-                                                        <td className="px-4 sm:px-6 py-3 text-right">
+                                                        <td className="w-[15%] px-4 sm:px-6 py-4 text-right">
                                                             <div className="flex justify-end gap-1 sm:gap-2" onClick={e => e.stopPropagation()}>
-                                                                <Button variant="ghost" size="sm" className="p-1 sm:p-2" onClick={() => handleEditItem(item)} title="Editar">
-                                                                    <Edit size={16} className="text-slate-400 hover:text-indigo-600 transition-colors" />
-                                                                </Button>
-                                                                <Button variant="ghost" size="sm" className="p-1 sm:p-2" onClick={() => handleDeleteItem(item.id)} title="Eliminar">
-                                                                    <Trash2 size={16} className="text-slate-400 hover:text-red-600 transition-colors" />
-                                                                </Button>
+                                                                <button
+                                                                    onClick={() => handleEditItem(item)}
+                                                                    className="p-2 text-slate-400 hover:text-clinical-600 dark:hover:text-clinical-400 hover:bg-clinical-50 dark:hover:bg-clinical-900/20 rounded-lg transition-all"
+                                                                    title="Editar"
+                                                                >
+                                                                    <Edit size={18} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteItem(item.id)}
+                                                                    className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                                                    title="Eliminar"
+                                                                >
+                                                                    <Trash2 size={18} />
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -2182,7 +2244,51 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                         </div>
 
                                         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {/* Removed Location Selection Fields */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación Stock General</label>
+                                                <select
+                                                    className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                                    value={selectedParentLocation}
+                                                    onChange={e => {
+                                                        setSelectedParentLocation(e.target.value);
+                                                        setSelectedSubLocation(''); // Reset sub selection when parent changes
+                                                    }}
+                                                >
+                                                    <option value="">Seleccionar ubicación...</option>
+                                                    {savedLocations
+                                                        .filter(l => l.type !== 'CART' && !l.parent_id)
+                                                        .sort((a, b) => a.name.localeCompare(b.name))
+                                                        .map(loc => (
+                                                            <option key={loc.id} value={loc.id}>
+                                                                {loc.name}
+                                                            </option>
+                                                        ))}
+                                                </select>
+                                                <p className="text-[10px] text-slate-500 mt-1 italic">Solo aparecen Almacenes y ubicaciones Externas</p>
+                                            </div>
+
+                                            {selectedParentLocation && (
+                                                <div className="animate-in slide-in-from-top-2 duration-200">
+                                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación Secundaria (Fila/Armario)</label>
+                                                    <select
+                                                        className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                                        value={selectedSubLocation}
+                                                        onChange={e => setSelectedSubLocation(e.target.value)}
+                                                        required
+                                                    >
+                                                        <option value="">Seleccionar sub-ubicación...</option>
+                                                        {savedLocations
+                                                            .filter(l => l.parent_id === selectedParentLocation)
+                                                            .sort((a, b) => a.name.localeCompare(b.name))
+                                                            .map(sub => (
+                                                                <option key={sub.id} value={sub.id}>
+                                                                    {sub.name}
+                                                                </option>
+                                                            ))}
+                                                    </select>
+                                                    <p className="text-[10px] text-amber-500 mt-1 italic font-medium">Debes seleccionar una sub-ubicación específica</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -2400,13 +2506,62 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                             {selectedTechItems.map(si => {
                                                                 const item = inventory.find(i => i.id === si.itemId);
+                                                                // Find locations for this item, prioritizing Carts and including colors
+                                                                const allItemLocs = globalCartItems.allItems
+                                                                    .filter(ci => ci.itemId === si.itemId)
+                                                                    .map(ci => {
+                                                                        const loc = savedLocations.find(l => l.id === ci.locationId);
+                                                                        if (!loc) return null;
+                                                                        let isCart = loc.type === 'CART';
+                                                                        let parentName = '';
+                                                                        let color = loc.color || '#94a3b8'; // Default grey
+                                                                        if (loc.parent_id) {
+                                                                            const parent = savedLocations.find(pl => pl.id === loc.parent_id);
+                                                                            if (parent?.type === 'CART') {
+                                                                                isCart = true;
+                                                                                color = parent.color || color;
+                                                                            }
+                                                                            parentName = parent?.name || '';
+                                                                        }
+                                                                        return {
+                                                                            isCart,
+                                                                            color,
+                                                                            text: parentName ? `${parentName} - ${loc.name}` : loc.name
+                                                                        };
+                                                                    })
+                                                                    .filter(Boolean) as { isCart: boolean; color: string; text: string }[];
+
+                                                                const cartLocs = allItemLocs.filter(l => l.isCart);
+                                                                const itemLocations = cartLocs.length > 0 ? cartLocs : allItemLocs;
+
                                                                 return (
-                                                                    <div key={si.itemId} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm">
-                                                                        <div className="flex items-center gap-2 overflow-hidden">
-                                                                            <img src={item?.imageUrl} className="w-8 h-8 rounded object-cover bg-slate-100" />
-                                                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{item?.name || 'Material sin nombre'}</span>
+                                                                    <div key={si.itemId} className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm">
+                                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                                            <img src={item?.imageUrl} className="w-10 h-10 rounded-lg object-cover bg-slate-100 flex-shrink-0" />
+                                                                            <div className="flex flex-col min-w-0">
+                                                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{item?.name || 'Material sin nombre'}</span>
+                                                                                {itemLocations.length > 0 ? (
+                                                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                                                        {itemLocations.map((loc, idx) => (
+                                                                                            <span
+                                                                                                key={idx}
+                                                                                                className="text-[10px] bg-slate-100 dark:bg-slate-700/50 px-1.5 py-0.5 rounded flex items-center gap-1 border transition-colors"
+                                                                                                style={{
+                                                                                                    backgroundColor: loc.isCart ? `${loc.color}15` : undefined,
+                                                                                                    borderColor: loc.isCart ? `${loc.color}40` : 'transparent',
+                                                                                                    color: loc.isCart ? loc.color : undefined
+                                                                                                }}
+                                                                                            >
+                                                                                                <MapPin size={10} /> {loc.text}
+                                                                                            </span>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <span className="text-[10px] text-amber-500 italic mt-0.5">Sin ubicación asignada</span>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                        <span className="bg-clinical-100 text-clinical-700 font-bold px-2 py-0.5 rounded text-xs">x{si.quantity}</span>
+                                                                        <span className="bg-clinical-100 text-clinical-700 font-bold px-2 py-0.5 rounded text-xs ml-2">x{si.quantity}</span>
                                                                     </div>
                                                                 );
                                                             })}
@@ -2662,6 +2817,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                         <Button variant="ghost" size="sm" onClick={() => setEditingLocation({ id: child.id, name: child.name, type: child.type, color: child.color })} title="Editar">
                                                                             <Edit size={14} className="text-slate-400 hover:text-indigo-600" />
                                                                         </Button>
+
                                                                         <Button variant="ghost" size="sm" onClick={() => handleDeleteLocation(child.id)} title="Borrar">
                                                                             <Trash2 size={14} className="text-slate-400 hover:text-red-600" />
                                                                         </Button>
@@ -2731,6 +2887,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                         <Button variant="ghost" size="sm" onClick={() => setEditingLocation({ id: child.id, name: child.name, type: child.type, color: child.color })} title="Editar">
                                                                             <Edit size={14} className="text-slate-400 hover:text-indigo-600" />
                                                                         </Button>
+
                                                                         <Button variant="ghost" size="sm" onClick={() => handleDeleteLocation(child.id)} title="Borrar">
                                                                             <Trash2 size={14} className="text-slate-400 hover:text-red-600" />
                                                                         </Button>
@@ -3005,6 +3162,150 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     }
                 </div >
             </div >
+            {/* Material Selector Modal for Sub-Locations (Drawers) */}
+            {activeTab === 'CART' && addMaterialData.isOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-4xl w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center border-b dark:border-slate-800 pb-3 shrink-0">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Gestionar Material ({addMaterialData.locationType})</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
+                                    Editando contenido de: <span className="font-bold text-indigo-600 dark:text-indigo-400">{addMaterialData.targetLocationName}</span>
+                                </p>
+                            </div>
+                            <button onClick={() => setAddMaterialData({ ...addMaterialData, isOpen: false })} className="text-slate-400 hover:text-slate-600">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden min-h-0">
+                            {/* LEFT COLUMN: Available Materials */}
+                            <div className="flex-1 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 pb-4 md:pb-0 md:pr-6">
+                                <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
+                                    <List size={18} /> Disponibles
+                                </h4>
+                                <input
+                                    type="text"
+                                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-clinical-500 outline-none text-slate-900 dark:text-white placeholder-slate-400"
+                                    placeholder="Buscar material..."
+                                    value={addMaterialData.searchTerm}
+                                    onChange={e => setAddMaterialData(prev => ({ ...prev, searchTerm: e.target.value }))}
+                                    autoFocus
+                                />
+                                <div className="flex-1 overflow-y-auto space-y-1 pr-2">
+                                    {inventory
+                                        .filter(item => item.name.toLowerCase().includes(addMaterialData.searchTerm.toLowerCase()))
+                                        .map(item => {
+                                            const isSelected = !!addMaterialData.selectedItems[item.id];
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    className={`p-3 flex items-center gap-3 cursor-pointer rounded-lg border transition-all ${isSelected
+                                                        ? 'bg-clinical-50 dark:bg-clinical-900/20 border-clinical-500 ring-1 ring-clinical-500'
+                                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                                        }`}
+                                                    onClick={() => toggleMaterialSelection(item.id)}
+                                                >
+                                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-clinical-600 border-clinical-600' : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}>
+                                                        {isSelected && <Check size={14} className="text-white" />}
+                                                    </div>
+                                                    {item.imageUrl && <img src={item.imageUrl} className="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 object-cover" alt="" />}
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{item.name}</span>
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            </div>
+
+                            {/* RIGHT COLUMN: Selected Materials */}
+                            <div className="flex-1 flex flex-col min-h-0">
+                                <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
+                                    <Package size={18} /> Seleccionados
+                                    <span className="text-xs bg-clinical-100 text-clinical-700 px-2 py-0.5 rounded-full">
+                                        {Object.keys(addMaterialData.selectedItems).length}
+                                    </span>
+                                </h4>
+
+                                {Object.keys(addMaterialData.selectedItems).length === 0 ? (
+                                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 italic border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/50">
+                                        <Package size={48} className="mb-4 opacity-20" />
+                                        <p>Selecciona materiales a la izquierda</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                                        {Object.entries(addMaterialData.selectedItems).map(([itemId, rawData]) => {
+                                            const data = rawData as { stockIdeal: number; nextExpiryDate: string };
+                                            const item = inventory.find(i => i.id === itemId);
+                                            if (!item) return null;
+                                            return (
+                                                <div key={itemId} className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                            {item.imageUrl && <img src={item.imageUrl} className="w-8 h-8 rounded bg-slate-100 dark:bg-slate-700 object-cover" alt="" />}
+                                                            <span className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{item.name}</span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => toggleMaterialSelection(itemId)}
+                                                            className="text-slate-400 hover:text-red-500 transition-colors"
+                                                            title="Eliminar"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-slate-500 mb-1">Stock Ideal</label>
+                                                            <div className="flex items-center">
+                                                                <button
+                                                                    onClick={() => updateSelectedMaterial(itemId, 'stockIdeal', Math.max(1, data.stockIdeal - 1))}
+                                                                    className="w-8 h-8 rounded-l border border-r-0 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600"
+                                                                >
+                                                                    -
+                                                                </button>
+                                                                <input
+                                                                    type="number"
+                                                                    value={data.stockIdeal}
+                                                                    onChange={e => updateSelectedMaterial(itemId, 'stockIdeal', parseInt(e.target.value) || 1)}
+                                                                    className="w-12 h-8 border-y border-slate-200 dark:border-slate-600 text-center text-sm outline-none dark:bg-slate-800 dark:text-white"
+                                                                />
+                                                                <button
+                                                                    onClick={() => updateSelectedMaterial(itemId, 'stockIdeal', data.stockIdeal + 1)}
+                                                                    className="w-8 h-8 rounded-r border border-l-0 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600"
+                                                                >
+                                                                    +
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        {addMaterialData.locationType === 'CART' && (
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-slate-500 mb-1">Caducidad</label>
+                                                                <input
+                                                                    type="date"
+                                                                    value={data.nextExpiryDate}
+                                                                    onChange={e => updateSelectedMaterial(itemId, 'nextExpiryDate', e.target.value)}
+                                                                    className="w-full h-8 border border-slate-200 dark:border-slate-700 rounded px-2 text-xs outline-none focus:border-clinical-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <Button onClick={handleAddMaterialToCart}>
+                                Guardar Cambios
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Material Selector Modal for Techniques */}
             {
                 itemSelectorOpen && (
@@ -3290,18 +3591,27 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                                                         if (matches.length === 0) return <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Sin Ubicación</span>;
 
-                                                                        return matches.map((match, idx) => {
-                                                                            const drawer = savedLocations.find(l => l.id === match.locationId);
-                                                                            if (!drawer) return null;
-                                                                            const cart = savedLocations.find(l => l.id === drawer.parent_id);
-                                                                            if (!cart) return <span key={idx} className="text-[10px] text-slate-400 uppercase font-bold tracking-tight block">{drawer.name}</span>;
+                                                                        const allResolved = matches.map((match) => {
+                                                                            const loc = savedLocations.find(l => l.id === match.locationId);
+                                                                            if (!loc) return null;
+                                                                            const isSub = !!loc.parent_id;
+                                                                            const parent = isSub ? savedLocations.find(p => p.id === loc.parent_id) : null;
+                                                                            const isCart = (loc.type === 'CART') || (parent?.type === 'CART');
 
-                                                                            return (
-                                                                                <span key={idx} className="text-[10px] text-slate-400 uppercase font-bold tracking-tight block">
-                                                                                    {cart.name} - {drawer.name}
-                                                                                </span>
-                                                                            );
-                                                                        });
+                                                                            return {
+                                                                                isCart,
+                                                                                text: isSub ? `${parent?.name} - ${loc.name}` : loc.name
+                                                                            };
+                                                                        }).filter(Boolean) as { isCart: boolean; text: string }[];
+
+                                                                        const cartLocs = allResolved.filter(l => l.isCart);
+                                                                        const finalLocs = cartLocs.length > 0 ? cartLocs : allResolved;
+
+                                                                        return finalLocs.map((loc, idx) => (
+                                                                            <span key={idx} className="text-[10px] text-slate-400 uppercase font-bold tracking-tight block">
+                                                                                {loc.text}
+                                                                            </span>
+                                                                        ));
                                                                     })()}
                                                                 </div>
                                                             </div>

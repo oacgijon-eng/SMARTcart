@@ -28,7 +28,6 @@ export function useCartItems(cartType: string) {
                     items (
                         id,
                         name,
-                        stock_ideal,
                         category,
                         image_url
                     )
@@ -63,9 +62,7 @@ export function useCartItems(cartType: string) {
                     stockIdeal: row.items.stock_ideal,
                     category: row.items.category,
                     imageUrl: row.items.image_url,
-                    locationType: LocationType.CART,
-                    ubicacion: '',
-                    ubicacion_secundaria: ''
+                    locationType: LocationType.CART
                 } : undefined
             }));
 
@@ -219,9 +216,7 @@ export function useGlobalCartItems(unitId?: string) {
                     stockIdeal: 0,
                     category: row.items.category,
                     imageUrl: row.items.image_url,
-                    locationType: LocationType.CART,
-                    ubicacion: '',
-                    ubicacion_secundaria: ''
+                    locationType: LocationType.CART
                 } : undefined
             }));
             setAllItems(mapped);

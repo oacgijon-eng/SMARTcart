@@ -197,6 +197,7 @@ const AppContent: React.FC = () => {
               cartContents={cartContents}
               onBack={handleBackToSelector}
               onStartRestock={handleStartRestock}
+              unitId={selectedUnitId || undefined}
             />
           )}
 
@@ -207,6 +208,7 @@ const AppContent: React.FC = () => {
               locations={locations}
               cartContents={cartContents}
               onFinish={handleFinishRestock}
+              unitId={selectedUnitId || undefined}
             />
           )}
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Button } from './UI';
-import { Plus, LayoutGrid, Package, Edit, Trash2, ChevronDown, ChevronRight, Check } from 'lucide-react';
+import { LayoutGrid, Package, Edit, Trash2, ChevronDown, ChevronRight, Check, Clock, Plus } from 'lucide-react';
 import { useCartItems } from '../hooks/useCartItems';
 import { Location } from '../hooks/useLocations';
 
@@ -10,7 +10,6 @@ interface CartViewProps {
     rootLocationId: string; // The ID of the cart itself (e.g. "Carro de Anestesia")
     cartItems: any[];
     loading: boolean;
-    onAddMaterial: (locationId: string, locationName: string, cartType: string) => void;
     onManageMaterials: (locationId: string, locationName: string, cartType: string, existingItems: any[]) => void;
     onManageLocations: () => void;
     onAddSubLocation?: () => void;
@@ -18,7 +17,7 @@ interface CartViewProps {
     onDeleteSubLocation?: (locationId: string) => void;
 }
 
-export const CartView: React.FC<CartViewProps> = ({ cartType, locations, rootLocationId, cartItems, loading, onAddMaterial, onManageMaterials, onManageLocations, onAddSubLocation, onEditSubLocation, onDeleteSubLocation }) => {
+export const CartView: React.FC<CartViewProps> = ({ cartType, locations, rootLocationId, cartItems, loading, onManageMaterials, onManageLocations, onAddSubLocation, onEditSubLocation, onDeleteSubLocation }) => {
     // We now receive cartItems and loading as props to ensure synchronization with Admin dashboard
     const [expandedDrawers, setExpandedDrawers] = useState<Set<string>>(new Set());
 
@@ -106,15 +105,6 @@ export const CartView: React.FC<CartViewProps> = ({ cartType, locations, rootLoc
 
                                         <Trash2 size={20} />
                                     </Button>
-                                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                    <button
-                                        className="h-9 w-9 flex items-center justify-center hover:bg-clinical-50 dark:hover:bg-clinical-900/30 rounded-full text-clinical-600 transition-colors"
-
-                                        title="Añadir material aquí"
-                                        onClick={() => onAddMaterial(location.id, location.name, cartType)}
-                                    >
-                                        <Plus size={22} />
-                                    </button>
                                 </div>
                             </div>
 
@@ -133,6 +123,30 @@ export const CartView: React.FC<CartViewProps> = ({ cartType, locations, rootLoc
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5 shrink-0">
+                                                        {cartItem.nextExpiryDate && (() => {
+                                                            const expiry = new Date(cartItem.nextExpiryDate);
+                                                            const today = new Date();
+                                                            const oneMonthFromNow = new Date();
+                                                            oneMonthFromNow.setDate(today.getDate() + 30);
+
+                                                            let styles = "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800/50";
+                                                            let iconColor = "text-green-600";
+
+                                                            if (expiry < today) {
+                                                                styles = "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/50";
+                                                                iconColor = "text-red-600";
+                                                            } else if (expiry < oneMonthFromNow) {
+                                                                styles = "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50";
+                                                                iconColor = "text-amber-600";
+                                                            }
+
+                                                            return (
+                                                                <div className={`flex items-center gap-1 mr-2 px-1.5 py-0.5 rounded border ${styles}`}>
+                                                                    <Clock size={10} className={iconColor} />
+                                                                    <span className="text-[10px] font-bold">{expiry.toLocaleDateString()}</span>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                         <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">Ideal</span>
                                                         <span className="text-slate-900 dark:text-slate-100 font-black bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-[10px] min-w-[20px] text-center">{cartItem.stockIdeal}</span>
                                                     </div>
