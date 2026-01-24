@@ -1404,19 +1404,26 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const base64 = reader.result as string;
-                try {
-                    // Resize and compress if it's a large image
-                    const resized = await resizeImage(base64, 800, 800, 0.7);
-                    setImagePreview(resized);
-                } catch (err) {
-                    console.error("Error resizing image:", err);
-                    setImagePreview(base64); // Fallback to original
-                }
-            };
-            reader.readAsDataURL(file);
+            try {
+                // Optimization: Use ObjectURL instead of FileReader for memory efficiency
+                // This prevents reading the entire 10MB+ file into a base64 string before resizing
+                const objectUrl = URL.createObjectURL(file);
+                // alert(`Debug: Foto seleccionada. Tamaño original: ${Math.round(file.size/1024)}KB`);
+
+                // Resize (accepts URL now)
+                const resized = await resizeImage(objectUrl, 600, 600, 0.7);
+                setImagePreview(resized);
+
+                // Cleanup
+                URL.revokeObjectURL(objectUrl);
+            } catch (err: any) {
+                console.error("Error handling image:", err);
+                alert(`Error procesando foto (Memoria/Formato): ${err.message}`);
+                // Fallback to simpler read if possible, but usually resizing is the fix.
+            }
+
+            // Clear input so same file can be selected again if needed
+            e.target.value = '';
         }
     };
 
