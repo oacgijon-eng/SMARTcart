@@ -104,13 +104,14 @@ export const Modal: React.FC<{
   children: React.ReactNode;
   maxWidth?: string;
   noPadding?: boolean;
-}> = ({ isOpen, onClose, title, children, maxWidth = 'max-w-md', noPadding = false }) => {
+  allowOverflow?: boolean;
+}> = ({ isOpen, onClose, title, children, maxWidth = 'max-w-md', noPadding = false, allowOverflow = false }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className={`bg-light-gray-blue dark:bg-night-card rounded-2xl shadow-xl w-full ${maxWidth} relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200`}>
+      <div className={`bg-light-gray-blue dark:bg-night-card rounded-2xl shadow-xl w-full ${maxWidth} relative z-10 ${allowOverflow ? '' : 'overflow-hidden'} animate-in fade-in zoom-in-95 duration-200`}>
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
           <h3 className="font-bold font-heading text-lg text-deep-blue dark:text-white">{title}</h3>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400">

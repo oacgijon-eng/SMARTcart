@@ -525,19 +525,20 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
         title="Protocolo de Técnica"
         maxWidth="max-w-7xl"
         noPadding
+        allowOverflow
       >
-        <div className="w-full h-[70vh] md:h-[85vh] flex flex-col">
+        <div className="w-full h-[70vh] md:h-[85vh] flex flex-col bg-white">
           {technique.protocolUrl ? (
             <>
-              <div className="flex-1 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden relative">
+              <div className="flex-1 w-full bg-slate-50 overflow-auto relative touch-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <object
                   data={`${technique.protocolUrl}#view=FitH`}
                   type="application/pdf"
-                  className="w-full h-full"
+                  className="w-full h-full block"
                 >
                   <iframe
                     src={technique.protocolUrl}
-                    className="w-full h-full border-none"
+                    className="w-full h-full border-none block"
                     title="Protocolo PDF Fallback"
                   />
                 </object>
