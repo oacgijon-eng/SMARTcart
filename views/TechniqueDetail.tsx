@@ -108,10 +108,6 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // PDF Modal State
-  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
-  const [pdfPage, setPdfPage] = useState(1);
-
   const openWarehouseModal = (item: Item) => {
     setSelectedItem(item);
     setIsWarehouseOpen(true);
@@ -130,7 +126,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
             variant="outline"
             size="sm"
             className="gap-2 hidden md:flex"
-            onClick={() => technique.protocolUrl && setIsPdfModalOpen(true)}
+            onClick={() => technique.protocolUrl && window.open(technique.protocolUrl, '_blank')}
           >
             <FileText size={16} /> Ver Protocolo PDF
           </Button>
@@ -144,7 +140,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
             variant="outline"
             size="sm"
             className="gap-2 w-full justify-center"
-            onClick={() => technique.protocolUrl && setIsPdfModalOpen(true)}
+            onClick={() => technique.protocolUrl && window.open(technique.protocolUrl, '_blank')}
           >
             <FileText size={16} /> Ver Protocolo PDF
           </Button>
@@ -519,83 +515,6 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
         </div>
       </Modal>
 
-      {/* PDF Protocol Modal */}
-      <Modal
-        isOpen={isPdfModalOpen}
-        onClose={() => {
-          setIsPdfModalOpen(false);
-          setPdfPage(1); // Reset to page 1 on close
-        }}
-        title="Protocolo de Técnica"
-        maxWidth="max-w-7xl"
-        noPadding
-        allowOverflow
-      >
-        <div className="w-full h-[75vh] md:h-[85vh] flex flex-col bg-white">
-          {technique.protocolUrl ? (
-            <>
-              {/* Toolbar */}
-              <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPdfPage(prev => Math.max(1, prev - 1))}
-                    disabled={pdfPage <= 1}
-                    className="p-1 h-8 w-8 rounded-lg"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                  </Button>
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm">
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Pág.</span>
-                    <span className="text-sm font-black text-clinical-600 dark:text-clinical-400 min-w-[20px] text-center">{pdfPage}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPdfPage(prev => prev + 1)}
-                    className="p-1 h-8 w-8 rounded-lg"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => window.open(technique.protocolUrl, '_blank')}
-                    title="Abrir en pestaña nueva"
-                    className="p-2 h-8 w-8 text-slate-500 hover:text-clinical-600"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
-                  </Button>
-                </div>
-              </div>
-
-              {/* PDF Container */}
-              <div className="flex-1 w-full bg-slate-200 overflow-auto relative touch-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-                <object
-                  key={`${technique.protocolUrl}-${pdfPage}`}
-                  data={`${technique.protocolUrl}#page=${pdfPage}&view=FitH`}
-                  type="application/pdf"
-                  className="w-full h-full block"
-                >
-                  <iframe
-                    src={`${technique.protocolUrl}#page=${pdfPage}`}
-                    className="w-full h-full border-none block"
-                    title="Protocolo PDF Fallback"
-                  />
-                </object>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full text-slate-500 text-center p-8">
-              <p>No hay documento de protocolo disponible asociada a esta técnica.</p>
-            </div>
-          )}
-        </div>
-      </Modal>
 
     </div >
   );
