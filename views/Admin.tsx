@@ -1405,7 +1405,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         try {
             // START: Image Processing
-            // alert("Debug: Evento detectado v5 (Sync/Repaired)."); // Removed for prod
+            alert("Imagen recibida. Iniciando..."); // Sync check to see if app reloaded
 
             // Minimal synchronous check
             if (!e.target.files || e.target.files.length === 0) return;
@@ -1415,17 +1415,16 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
             setTimeout(async () => {
                 try {
-                    if (fileRef.size > 2 * 1024 * 1024) alert("Optimizando foto... un momento.");
-                    // alert(`Debug: Procesando en background (v5)...\nArchivo: ${fileRef.name}`);
+                    // if (fileRef.size > 2 * 1024 * 1024) alert("Optimizando foto... un momento.");
+
                     if (fileRef.size > 20 * 1024 * 1024) throw new Error("Imagen > 20MB. Usa menor resolución.");
 
-                    // Resize (accepts Blob directly now for better memory usage)
+                    // Resize
                     const resized = await resizeImage(fileRef, 600, 600, 0.7);
 
                     if (!resized) {
                         alert("Error: El redimensionado devolvió vacio.");
                     } else {
-                        // alert(`Debug: Imagen procesada OK. Longitud: ${resized.length}`);
                         setImagePreview(resized);
                     }
 
@@ -2365,7 +2364,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                     <input
                                                         type="file"
                                                         accept="image/*"
-                                                        capture="environment" // Forces Camera (High Res)
+                                                        // capture="environment" // REMOVED: Causes crash/reload on some Androids
                                                         className="hidden"
                                                         ref={cameraInputRef}
                                                         onChange={handleImageChange}
@@ -2373,6 +2372,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <Button
+                                                            type="button"
                                                             onClick={() => fileInputRef.current?.click()}
                                                             variant="outline"
                                                             className="gap-2 h-12"
@@ -2382,12 +2382,13 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         </Button>
 
                                                         <Button
+                                                            type="button"
                                                             onClick={() => cameraInputRef.current?.click()}
                                                             variant="outline"
                                                             className="gap-2 h-12 bg-slate-50 dark:bg-slate-800"
                                                         >
                                                             <Camera size={18} />
-                                                            <span className="text-xs sm:text-sm">Cámara</span>
+                                                            <span className="text-xs sm:text-sm">Cámara (v7)</span>
                                                         </Button>
                                                     </div>
                                                 </div>

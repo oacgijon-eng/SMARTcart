@@ -13,43 +13,7 @@ export async function resizeImage(
     maxHeight: number = 600,
     quality: number = 0.7
 ): Promise<string> {
-    // Modern Browser Approach: Use createImageBitmap (Highly efficient & low memory)
-    if (typeof createImageBitmap === 'function' && (source instanceof Blob || source instanceof File)) {
-        try {
-            alert("Debug: Iniciando optimización rápida (createImageBitmap)...");
-
-            // ATTEMPT 1: Native Resize (Best for memory)
-            // Note: If browser ignores options, it will return full size (risk of crash on draw)
-            const bitmap = await createImageBitmap(source, {
-                resizeWidth: maxWidth,
-                resizeQuality: 'medium'
-            });
-
-            const width = bitmap.width;
-            const height = bitmap.height;
-            alert(`Debug: Bitmap nativo ${width}x${height}`);
-
-            const canvas = document.createElement("canvas");
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-
-            if (ctx) {
-                ctx.drawImage(bitmap, 0, 0, width, height);
-                const dataUrl = canvas.toDataURL("image/jpeg", quality);
-                bitmap.close(); // Important: Release memory immediately
-                // alert(`Debug: Optimización completada. Longitud: ${dataUrl.length}`);
-                return dataUrl;
-            } else {
-                alert("Error: No se pudo crear contexto 2D para bitmap");
-            }
-        } catch (e: any) {
-            console.warn("createImageBitmap failed, falling back to legacy resize...", e);
-            alert(`Aviso: Falló optimización rápida (${e.message}). Intentando método tradicional...`);
-        }
-    } else {
-        // alert("Debug: createImageBitmap no soportado o fuente no válida. Usando fallback.");
-    }
+    // (Native implementation removed to prevent usage)
 
     // Legacy / String Fallback
     return new Promise((resolve, reject) => {
