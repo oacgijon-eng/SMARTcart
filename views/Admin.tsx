@@ -623,14 +623,34 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         }
     };
 
+    // Robust Base64 to Blob converter
+    const base64ToBlob = (base64: string, contentType: string = 'image/jpeg') => {
+        const byteCharacters = atob(base64.split(',')[1]);
+        const byteArrays = [];
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteArrays.push(byteCharacters.charCodeAt(i));
+        }
+        const byteArray = new Uint8Array(byteArrays);
+        return new Blob([byteArray], { type: contentType });
+    };
+
     const uploadImageToStorage = async (base64Data: string): Promise<string | null> => {
         try {
-            // Convert Base64 to Blob
-            const res = await fetch(base64Data);
-            const blob = await res.blob();
+            // STEP 1: Conversion
+            alert("Paso 1: Convirtiendo imagen...");
+            let blob;
+            try {
+                blob = base64ToBlob(base64Data, 'image/jpeg');
+                console.log("Blob created:", blob.size, blob.type);
+            } catch (e: any) {
+                alert(`Error convirtiendo imagen: ${e.message}`);
+                return null;
+            }
 
             const fileName = `img_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
 
+            // STEP 2: Upload
+            alert(`Paso 2: Subiendo ${Math.round(blob.size / 1024)}KB a Storage...`);
             const { data, error } = await supabase.storage
                 .from('images')
                 .upload(fileName, blob, {
@@ -640,7 +660,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
             if (error) {
                 console.error("Supabase Storage Upload Error:", error);
-                alert(`Error subiendo imagen: ${error.message}`);
+                alert(`Error subiendo imagen real: ${error.message}`);
                 throw error;
             }
 
@@ -650,11 +670,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
             return publicUrl;
         } catch (error: any) {
-            console.error("Error uploading image to storage:", error);
-            // Alert already shown if it was a supabase error, but catch-all here
-            if (!error.message?.includes('Supabase Storage Upload Error')) {
-                // Squelch redundant alerts or specific fetch errors
-            }
+            // Alerts handled above for specific steps
             return null;
         }
     };

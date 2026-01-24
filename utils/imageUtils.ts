@@ -53,6 +53,7 @@ export async function resizeImage(
             // Convert to base64 with quality compression
             const resizedDataUrl = canvas.toDataURL("image/jpeg", quality);
             console.log("Resizing complete. Output length:", resizedDataUrl.length);
+            // alert(`Debug: Imagen redimensionada\nOriginal: ${width}x${height}\nSize: ${Math.round(resizedDataUrl.length/1024)}KB`);
             resolve(resizedDataUrl);
         };
 
