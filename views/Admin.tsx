@@ -1418,8 +1418,18 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 URL.revokeObjectURL(objectUrl);
             } catch (err: any) {
                 console.error("Error handling image:", err);
-                alert(`Error procesando foto (Memoria/Formato): ${err.message}`);
-                // Fallback to simpler read if possible, but usually resizing is the fix.
+
+                // Fallback: If resize fails (often memory on older phones), try original if < 4MB
+                if (file.size < 4 * 1024 * 1024) {
+                    alert("Aviso: Falló la compresión. Usando imagen original...");
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setImagePreview(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert(`Error: La imagen es muy grande (${Math.round(file.size / 1024)}KB) y falló la compresión. Intenta tomar la foto con menor resolución.`);
+                }
             }
 
             // Clear input so same file can be selected again if needed
