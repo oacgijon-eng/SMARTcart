@@ -543,7 +543,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const [isRegistrosOpen, setIsRegistrosOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isTabSelectorOpen, setIsTabSelectorOpen] = useState(false);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
     // Material Creation/Edit State - Now received from props
     // const {createItem, updateItem, deleteItem} = useItems();
@@ -1541,7 +1541,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             title={isSidebarCollapsed ? "Carros" : ""}
                         >
                             <div className="flex items-center gap-3">
-                                <MapPin size={18} />
+                                <img src="/Carro%20dia-01.png" alt="Carros" className="w-5 h-5 dark:hidden object-contain" />
+                                <img src="/carro%20noche-01.png" alt="Carros" className="w-5 h-5 hidden dark:block object-contain" />
                                 {!isSidebarCollapsed && <span>Carros</span>}
                             </div>
                             {!isSidebarCollapsed && (isCartsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
