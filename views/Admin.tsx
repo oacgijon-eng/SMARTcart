@@ -13,6 +13,7 @@ import { useIncidents } from '../hooks/useIncidents';
 import { useFeedbacks } from '../hooks/useFeedbacks';
 import { useUsers } from '../hooks/useUsers';
 import { generateMaterialImage, correctText } from '../services/ai';
+import { resizeImage } from '../utils/imageUtils';
 
 interface AdminProps {
     inventory: Item[];
@@ -600,6 +601,36 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const [equipmentMainSearch, setEquipmentMainSearch] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: keyof Item; direction: 'asc' | 'desc' }>({ key: 'name', direction: 'asc' });
 
+    // Helper to upload base64 images to Supabase Storage
+    const uploadImageToStorage = async (base64Data: string): Promise<string | null> => {
+        try {
+            // Convert Base64 to Blob
+            const res = await fetch(base64Data);
+            const blob = await res.blob();
+
+            const fileName = `img_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+
+            const { data, error } = await supabase.storage
+                .from('images')
+                .upload(fileName, blob, {
+                    contentType: 'image/jpeg',
+                    upsert: false
+                });
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('images')
+                .getPublicUrl(fileName);
+
+            return publicUrl;
+        } catch (error) {
+            console.error("Error uploading image to storage:", error);
+            // Don't throw, return null to let caller decide (fallback or fail)
+            return null;
+        }
+    };
+
     const handleSort = (key: keyof Item) => {
         setSortConfig(current => ({
             key,
@@ -638,6 +669,19 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         try {
             setUploading(true);
             let finalImage = imagePreview;
+
+            // Upload to Storage if it's a new image (base64)
+            if (finalImage && finalImage.startsWith('data:')) {
+                console.log("Uploading equipment image to storage...");
+                const uploadedUrl = await uploadImageToStorage(finalImage);
+                if (uploadedUrl) {
+                    finalImage = uploadedUrl;
+                } else {
+                    console.warn("Upload failed, keeping base64 (might fail DB save)");
+                }
+            }
+
+            console.log("Saving Equipment. Image length:", finalImage?.length);
 
             // Basic Format Correction
             let finalName = newEquipment.name.trim();
@@ -1177,8 +1221,20 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
         try {
             setUploading(true);
-
             let finalImage = imagePreview;
+
+            // Upload to Storage if it's a new image (base64)
+            if (finalImage && finalImage.startsWith('data:')) {
+                console.log("Uploading material image to storage...");
+                const uploadedUrl = await uploadImageToStorage(finalImage);
+                if (uploadedUrl) {
+                    finalImage = uploadedUrl;
+                } else {
+                    console.warn("Upload failed, keeping base64 (might fail DB save)");
+                }
+            }
+
+            console.log("Saving Material. Image length:", finalImage?.length);
 
             // Basic Format Correction (Capitalization)
             let finalName = newItem.name.trim();
@@ -1291,12 +1347,20 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
+            reader.onloadend = async () => {
+                const base64 = reader.result as string;
+                try {
+                    // Resize and compress if it's a large image
+                    const resized = await resizeImage(base64, 800, 800, 0.7);
+                    setImagePreview(resized);
+                } catch (err) {
+                    console.error("Error resizing image:", err);
+                    setImagePreview(base64); // Fallback to original
+                }
             };
             reader.readAsDataURL(file);
         }
