@@ -1404,8 +1404,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         try {
-            // ALERT: Entry v5 - Sync
-            alert("Debug: Evento detectado v5 (Sync/Repaired).");
+            // START: Image Processing
+            // alert("Debug: Evento detectado v5 (Sync/Repaired)."); // Removed for prod
 
             // Minimal synchronous check
             if (!e.target.files || e.target.files.length === 0) return;
@@ -1415,7 +1415,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
             setTimeout(async () => {
                 try {
-                    alert(`Debug: Procesando en background (v5)...\nArchivo: ${fileRef.name}`);
+                    if (fileRef.size > 2 * 1024 * 1024) alert("Optimizando foto... un momento.");
+                    // alert(`Debug: Procesando en background (v5)...\nArchivo: ${fileRef.name}`);
                     if (fileRef.size > 20 * 1024 * 1024) throw new Error("Imagen > 20MB. Usa menor resolución.");
 
                     const objectUrl = URL.createObjectURL(fileRef);
