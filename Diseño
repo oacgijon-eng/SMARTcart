@@ -1,0 +1,47 @@
+A continuación, les comparto la definición oficial de la nueva identidad visual para la aplicación SMARTcart.
+
+El objetivo es implementar un diseño moderno, limpio y profesional que transmita eficiencia y orden en el entorno sanitario, con una clara diferenciación entre el modo día y el modo noche.
+
+Adjunto el panel de resumen visual como referencia principal de "look & feel". Por favor, utilicen los siguientes valores técnicos para el desarrollo:
+
+Adjunto logos tento modo dia como noche, completos, solo carro, solo texto  
+
+1. Logotipo (PNG)
+Variante Modo Día (Fondos claros): Icono/Texto "SMART" en Deep Blue (#2C3E50); Check/Texto "cart" en Teal Green (#1ABC9C).
+
+Variante Modo Noche (Fondos oscuros): Icono/Texto "SMART" en Light Text (#ECF0F1); Check/Texto "cart" en Teal Green (#1ABC9C).
+
+2. Paleta de Colores (Hexadecimales)
+🌞 Palette Modo Día (Day Mode) - ACTUALIZADO:
+
+Color Principal (Texto): Deep Blue #2C3E50
+
+Color de Acento (Acciones): Teal Green #1ABC9C
+
+Fondo Principal (Lienzo): White #FFFFFF
+
+Fondo Secundario (Tarjetas/Contenedores): Light Gray-Blue #E8EBED (⚠️ Importante: Usar este nuevo valor para garantizar contraste).
+
+🌚 Palette Modo Noche (Night Mode) - SIN CAMBIOS:
+
+Fondo Principal: Dark Blue-Black #121B26
+
+Fondo Secundario (Tarjetas): Darker Blue #1C2A39
+
+Color de Acento: Teal Green #1ABC9C
+
+Texto Principal: Light Gray #ECF0F1
+
+3. Tipografía (Referencia)
+Títulos y Marca (ej. "SMARTcart", Encabezados): Montserrat (Bold para énfasis, Regular para complementos).
+
+Cuerpo de Texto y Datos (ej. Listas de materiales): Inter (Optimizada para lectura en pantalla).
+
+4. Estilo UI (Referencia Mini UI)
+Botones y Tarjetas: Utilizar bordes redondeados suaves para una apariencia moderna y amigable, como se muestra en los ejemplos del panel.
+
+Botones Primarios: Usar el color de acento Teal Green (#1ABC9C) con texto blanco o claro para las acciones principales (ej. "Log In", "Sign up").
+
+Quedo a su disposición para cualquier duda técnica sobre la implementación de estos estilos.
+
+Un saludo.

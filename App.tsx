@@ -166,20 +166,20 @@ const AppContent: React.FC = () => {
 
   // Render Logic
   return (
-    <div className="font-sans antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 dark:text-slate-50 min-h-screen">
+    <div className="font-sans antialiased text-deep-blue bg-white dark:bg-night-bg dark:text-slate-100 min-h-screen">
 
       {/* Main Content Render */}
       <div className="w-full">
         {itemsLoading || techniquesLoading || unitsLoading || locationsLoading || cartLoading ? (
-          <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+          <div className="min-h-screen bg-white dark:bg-night-bg flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-clinical-600"></div>
               <p className="text-slate-500 dark:text-slate-400 font-medium">Cargando datos del sistema...</p>
             </div>
           </div>
         ) : itemsError || techniquesError || locationsError ? (
-          <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center">
+          <div className="min-h-screen bg-white dark:bg-night-bg flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white dark:bg-night-card p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center">
               <h2 className="text-xl font-bold text-red-600 mb-2">Error al cargar datos</h2>
               <p className="text-slate-500 mb-6">{itemsError || techniquesError || locationsError}</p>
               <button onClick={() => window.location.reload()} className="w-full py-3 bg-clinical-600 text-white rounded-xl font-bold">Reintentar</button>
@@ -251,20 +251,20 @@ const AppContent: React.FC = () => {
             {view === 'ADMIN_DASHBOARD' && (
               <>
                 {profileLoading ? (
-                  <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+                  <div className="min-h-screen bg-white dark:bg-night-bg flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-clinical-600"></div>
                       <p className="text-slate-500 dark:text-slate-400 font-medium">Verificando permisos...</p>
                     </div>
                   </div>
                 ) : !profile || (profile.role !== 'SUPERVISOR' && profile.role !== 'ADMIN') ? (
-                  <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-                    <div className="max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center space-y-4">
+                  <div className="min-h-screen bg-white dark:bg-night-bg flex items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-white dark:bg-night-card p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center space-y-4">
                       <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Acceso Denegado</h2>
+                        <h2 className="text-2xl font-bold text-deep-blue dark:text-white">Acceso Denegado</h2>
                         <p className="text-slate-500 dark:text-slate-400 mt-2">
                           Esta cuenta no tiene permisos de supervisión.
                         </p>
@@ -273,7 +273,7 @@ const AppContent: React.FC = () => {
                       <div className="pt-4 space-y-3">
                         <button
                           onClick={() => { signOut(); setView('ADMIN_LOGIN'); }}
-                          className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-xl transition-colors"
+                          className="w-full py-3 px-4 bg-deep-blue hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-deep-blue font-bold rounded-xl transition-colors"
                         >
                           Cerrar Sesión
                         </button>

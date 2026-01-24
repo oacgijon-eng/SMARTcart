@@ -18,14 +18,14 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
   const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6 relative transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-night-bg flex flex-col items-center justify-center p-6 relative transition-colors duration-300">
 
       {/* Top Bar Actions */}
       <div className="absolute top-6 left-6 right-6 flex justify-between items-start pt-[env(safe-area-inset-top)]">
         <div className="flex gap-3">
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-yellow-500 dark:hover:text-yellow-400 shadow-sm border border-slate-100 dark:border-slate-700 transition-all active:scale-95"
+            className="p-2.5 rounded-xl bg-white dark:bg-night-card text-slate-400 hover:text-yellow-500 dark:hover:text-yellow-400 shadow-sm border border-slate-100 dark:border-slate-700 transition-all active:scale-95"
             aria-label="Toggle Dark Mode"
           >
             {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
@@ -33,7 +33,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
 
           <button
             onClick={() => setIsInfoModalOpen(true)}
-            className="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-clinical-600 dark:hover:text-clinical-400 shadow-sm border border-slate-100 dark:border-slate-700 transition-all active:scale-95"
+            className="p-2.5 rounded-xl bg-white dark:bg-night-card text-slate-400 hover:text-clinical-600 dark:hover:text-clinical-400 shadow-sm border border-slate-100 dark:border-slate-700 transition-all active:scale-95"
             aria-label="Información del Proyecto"
           >
             <Info size={22} />
@@ -42,7 +42,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
 
         <button
           onClick={onAdminStart}
-          className="flex items-center gap-2 text-slate-400 hover:text-clinical-600 transition-colors px-4 py-2.5 rounded-xl hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-100 dark:hover:border-slate-700 text-sm font-medium active:scale-95"
+          className="flex items-center gap-2 text-slate-400 hover:text-clinical-600 transition-colors px-4 py-2.5 rounded-xl hover:bg-white dark:hover:bg-night-card border border-transparent hover:border-slate-100 dark:hover:border-slate-700 text-sm font-medium active:scale-95"
         >
           <ShieldCheck size={18} />
           <span className="hidden sm:inline">Acceso Supervisión</span>
@@ -54,11 +54,12 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
 
         {/* Logo Area */}
         <div className="space-y-4 animate-fade-in-up">
-          <div className="w-24 h-24 bg-clinical-600 rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-clinical-200">
-            <Activity size={48} className="text-white" />
+          {/* Logo - Toggle based on Dark Mode */}
+          <div className="flex justify-center">
+            <img src="/SMARTcart Logo dia.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto dark:hidden transition-all duration-500" />
+            <img src="/SMARTcart logo noche.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto hidden dark:block transition-all duration-500" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">SMARTcart</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Asistente de Carros de Técnicas</p>
             {unitName && (
               <p className="mt-2 text-sm font-medium text-clinical-600 dark:text-clinical-400 bg-clinical-50 dark:bg-clinical-900/30 px-3 py-1 rounded-full inline-block">
@@ -110,7 +111,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
 
           <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed">
             <p>
-              <span className="font-bold text-slate-900 dark:text-white">SMARTcart</span> integra la logística con la asistencia a pie de cama para reducir la carga cognitiva y evitar interrupciones, permitiéndote centrarte únicamente en el cuidado del paciente.
+              <span className="font-bold text-deep-blue dark:text-white">SMARTcart</span> integra la logística con la asistencia a pie de cama para reducir la carga cognitiva y evitar interrupciones, permitiéndote centrarte únicamente en el cuidado del paciente.
             </p>
             <p>
               Nuestro objetivo prioritario es la <span className="font-semibold text-clinical-600 dark:text-clinical-400">seguridad clínica</span>, garantizando a través de este sistema que los carros estén siempre completos y libres de material caducado antes de cada técnica.
@@ -146,6 +147,6 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
           Agradezco tu colaboración reportando errores o sugerencias a: <a href="mailto:oacgijon@gmail.com" className="hover:text-clinical-500 transition-colors">oacgijon@gmail.com</a>
         </p>
       </div>
-    </div>
+    </div >
   );
 };

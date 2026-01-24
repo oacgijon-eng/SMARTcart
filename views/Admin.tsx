@@ -67,10 +67,14 @@ export const AdminLogin: React.FC<{
     };
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors pt-[calc(1rem+env(safe-area-inset-top))]">
-            <Card className="w-full max-w-sm sm:max-w-md p-6 sm:p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
+        <div className="min-h-screen bg-white dark:bg-night-bg flex items-center justify-center p-4 transition-colors pt-[calc(1rem+env(safe-area-inset-top))]">
+            <Card className="w-full max-w-sm sm:max-w-md p-6 sm:p-8 space-y-6 dark:bg-night-card dark:border-slate-700">
                 <div className="text-center">
-                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Acceso Supervisión</h2>
+                    <div className="flex justify-center mb-4">
+                        <img src="/Carro dia-01.png" alt="Logo" className="h-16 w-auto dark:hidden" />
+                        <img src="/carro noche-01.png" alt="Logo" className="h-16 w-auto hidden dark:block" />
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-bold font-heading text-deep-blue dark:text-white">Acceso Supervisión</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">Introduce tus credenciales</p>
                 </div>
 
@@ -85,7 +89,7 @@ export const AdminLogin: React.FC<{
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                         <input
                             type="email"
-                            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400"
+                            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-night-bg text-deep-blue dark:text-white placeholder-slate-400"
                             placeholder="admin@hospital.com"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
@@ -96,7 +100,7 @@ export const AdminLogin: React.FC<{
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Contraseña</label>
                         <input
                             type="password"
-                            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400"
+                            className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-night-bg text-deep-blue dark:text-white placeholder-slate-400"
                             placeholder="••••••"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
@@ -207,24 +211,24 @@ const SettingsView: React.FC<{ unitId: string }> = ({ unitId }) => {
     return (
         <div className="max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             <div>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Panel de Control</h2>
+                <h2 className="text-2xl font-bold font-heading text-deep-blue dark:text-white">Panel de Control</h2>
                 <p className="text-slate-500 dark:text-slate-400">Configuración de la unidad y mantenimiento</p>
             </div>
 
             {/* Current Unit & Local Settings */}
             <section className="space-y-6">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <h3 className="text-lg font-bold font-heading text-deep-blue dark:text-white flex items-center gap-2">
                     <Settings size={20} className="text-clinical-500" /> Identificación de la Unidad
                 </h3>
-                <Card className="p-4 sm:p-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
+                <Card className="p-4 sm:p-8 space-y-6 dark:bg-night-card dark:border-slate-700">
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-4 p-4 bg-white dark:bg-night-bg rounded-2xl border border-slate-100 dark:border-slate-800">
                             <div className="p-3 bg-clinical-100 dark:bg-clinical-900/50 rounded-xl text-clinical-600">
                                 <Building2 size={24} />
                             </div>
                             <div>
                                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Nombre Actual</p>
-                                <p className="text-lg font-bold text-slate-900 dark:text-white">
+                                <p className="text-lg font-bold text-deep-blue dark:text-white">
                                     {currentUnitName || 'Sin nombre'}
                                 </p>
                             </div>
@@ -235,7 +239,7 @@ const SettingsView: React.FC<{ unitId: string }> = ({ unitId }) => {
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <input
                                     type="text"
-                                    className="flex-1 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    className="flex-1 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-night-bg text-deep-blue dark:text-white"
                                     placeholder="Ej: UCI A, Planta 4, Emergencias..."
                                     value={newName}
                                     onChange={e => setNewName(e.target.value)}
@@ -358,7 +362,7 @@ const UsersView: React.FC = () => {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Gestión de Usuarios</h2>
+                    <h2 className="text-2xl font-bold font-heading text-deep-blue dark:text-white">Gestión de Usuarios</h2>
                     <p className="text-slate-500 dark:text-slate-400">Control de acceso al espacio de Supervisión</p>
                 </div>
                 <Button onClick={() => setIsCreating(true)} className="gap-2">
@@ -452,7 +456,7 @@ const UsersView: React.FC = () => {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                        <tr className="bg-light-gray-blue dark:bg-slate-800/50 border-b border-white dark:border-slate-800">
                             <th className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Nombre</th>
                             <th className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Rol</th>
                             <th className="px-4 sm:px-6 py-3 sm:py-4 text-xs font-black text-slate-400 uppercase tracking-widest hidden sm:table-cell">Fecha Alta</th>
