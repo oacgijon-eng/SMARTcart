@@ -617,16 +617,23 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     upsert: false
                 });
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase Storage Upload Error:", error);
+                alert(`Error subiendo imagen: ${error.message}`);
+                throw error;
+            }
 
             const { data: { publicUrl } } = supabase.storage
                 .from('images')
                 .getPublicUrl(fileName);
 
             return publicUrl;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error uploading image to storage:", error);
-            // Don't throw, return null to let caller decide (fallback or fail)
+            // Alert already shown if it was a supabase error, but catch-all here
+            if (!error.message?.includes('Supabase Storage Upload Error')) {
+                // Squelch redundant alerts or specific fetch errors
+            }
             return null;
         }
     };
@@ -677,7 +684,12 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 if (uploadedUrl) {
                     finalImage = uploadedUrl;
                 } else {
-                    console.warn("Upload failed, keeping base64 (might fail DB save)");
+                    console.warn("Upload failed, keeping base64");
+                    if (!confirm("La subida de la imagen falló. ¿Intentar guardar sin imagen?")) {
+                        setUploading(false);
+                        return; // Stop saving
+                    }
+                    finalImage = ''; // Clear it to avoid DB error
                 }
             }
 
@@ -1230,7 +1242,12 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 if (uploadedUrl) {
                     finalImage = uploadedUrl;
                 } else {
-                    console.warn("Upload failed, keeping base64 (might fail DB save)");
+                    console.warn("Upload failed, keeping base64");
+                    if (!confirm("La subida de la imagen falló. ¿Intentar guardar sin imagen?")) {
+                        setUploading(false);
+                        return; // Stop saving
+                    }
+                    finalImage = ''; // Clear it to avoid DB error
                 }
             }
 
