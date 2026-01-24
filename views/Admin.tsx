@@ -1378,6 +1378,11 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                         }
                     }
 
+                    if (!targetLoc) {
+                        alert("Error: La ubicación seleccionada no parece existir. Por favor recarga la página.");
+                        return;
+                    }
+
                     // Use the top-level supabase client already imported
                     const { error: assocError } = await supabase.from('cart_contents').upsert({
                         item_id: createdItemId,
