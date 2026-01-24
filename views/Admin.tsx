@@ -1400,6 +1400,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     };
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         try {
@@ -2351,21 +2352,39 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                     <input
                                                         type="file"
                                                         accept="image/*"
-                                                        // capture="environment" removed to allow gallery selection and avoid forced high-res camera crash
+                                                        // NO capture attribute -> Gallery/File Picker (Safe)
                                                         className="hidden"
                                                         ref={fileInputRef}
                                                         onChange={handleImageChange}
                                                     />
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        capture="environment" // Forces Camera (High Res)
+                                                        className="hidden"
+                                                        ref={cameraInputRef}
+                                                        onChange={handleImageChange}
+                                                    />
 
-                                                    <Button
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                        fullWidth
-                                                        variant="outline"
-                                                        className="gap-2 h-12"
-                                                    >
-                                                        <Upload size={18} />
-                                                        Subir Imagen
-                                                    </Button>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <Button
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                            variant="outline"
+                                                            className="gap-2 h-12"
+                                                        >
+                                                            <Upload size={18} />
+                                                            <span className="text-xs sm:text-sm">Galería</span>
+                                                        </Button>
+
+                                                        <Button
+                                                            onClick={() => cameraInputRef.current?.click()}
+                                                            variant="outline"
+                                                            className="gap-2 h-12 bg-slate-50 dark:bg-slate-800"
+                                                        >
+                                                            <Camera size={18} />
+                                                            <span className="text-xs sm:text-sm">Cámara</span>
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
