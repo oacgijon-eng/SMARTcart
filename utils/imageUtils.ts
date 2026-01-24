@@ -1,7 +1,7 @@
 
 /**
  * Resizes and compresses a base64 or URL image.
- * @param dataUrl The image source (base64 or URL).
+ * @param dataUrl The image source (base64 or URL) OR Blob/File.
  * @param maxWidth Max width in pixels.
  * @param maxHeight Max height in pixels.
  * @param quality Compression quality (0 to 1).
@@ -16,23 +16,18 @@ export async function resizeImage(
     // Modern Browser Approach: Use createImageBitmap (Highly efficient & low memory)
     if (typeof createImageBitmap === 'function' && (source instanceof Blob || source instanceof File)) {
         try {
-            console.log("Using createImageBitmap optimization...");
-            const bitmap = await createImageBitmap(source);
+            alert("Debug: Iniciando optimización rápida (createImageBitmap)...");
 
-            let width = bitmap.width;
-            let height = bitmap.height;
+            // ATTEMPT 1: Native Resize (Best for memory)
+            // Note: If browser ignores options, it will return full size (risk of crash on draw)
+            const bitmap = await createImageBitmap(source, {
+                resizeWidth: maxWidth,
+                resizeQuality: 'medium'
+            });
 
-            if (width > height) {
-                if (width > maxWidth) {
-                    height *= maxWidth / width;
-                    width = maxWidth;
-                }
-            } else {
-                if (height > maxHeight) {
-                    width *= maxHeight / height;
-                    height = maxHeight;
-                }
-            }
+            const width = bitmap.width;
+            const height = bitmap.height;
+            alert(`Debug: Bitmap nativo ${width}x${height}`);
 
             const canvas = document.createElement("canvas");
             canvas.width = width;
@@ -43,11 +38,17 @@ export async function resizeImage(
                 ctx.drawImage(bitmap, 0, 0, width, height);
                 const dataUrl = canvas.toDataURL("image/jpeg", quality);
                 bitmap.close(); // Important: Release memory immediately
+                // alert(`Debug: Optimización completada. Longitud: ${dataUrl.length}`);
                 return dataUrl;
+            } else {
+                alert("Error: No se pudo crear contexto 2D para bitmap");
             }
-        } catch (e) {
+        } catch (e: any) {
             console.warn("createImageBitmap failed, falling back to legacy resize...", e);
+            alert(`Aviso: Falló optimización rápida (${e.message}). Intentando método tradicional...`);
         }
+    } else {
+        // alert("Debug: createImageBitmap no soportado o fuente no válida. Usando fallback.");
     }
 
     // Legacy / String Fallback
@@ -62,6 +63,7 @@ export async function resizeImage(
         img.onload = () => {
             let width = img.width;
             let height = img.height;
+            // console.log("Original dimensions:", width, "x", height);
 
             if (width > height) {
                 if (width > maxWidth) {
