@@ -193,7 +193,7 @@ export function useGlobalCartItems(unitId?: string) {
                 `);
 
             if (unitId) {
-                query = query.eq('locations.unit_id', unitId);
+                query = query.or(`unit_id.eq.${unitId},unit_id.is.null`, { foreignTable: 'locations' });
             }
 
             const { data, error } = await query;
