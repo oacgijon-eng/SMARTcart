@@ -375,7 +375,7 @@ const UsersView: React.FC = () => {
                     <strong className="font-bold">Error al eliminar: </strong>
                     <span className="block sm:inline">{deleteError}</span>
                     <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setDeleteError(null)}>
-                        <X className="h-4 w-4 text-red-500 cursor-pointer" />
+                        <X className="h-4 w-4 text-red-500 cursor-pointer" aria-label="Cerrar alerta" />
                     </span>
                 </div>
             )}
@@ -423,8 +423,9 @@ const UsersView: React.FC = () => {
                             </>
                         )}
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase ml-1">Rol</label>
+                            <label htmlFor="user-role-select" className="text-xs font-bold text-slate-500 uppercase ml-1">Rol</label>
                             <select
+                                id="user-role-select"
                                 className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                 value={role}
                                 onChange={e => setRole(e.target.value as any)}
@@ -519,6 +520,7 @@ const UsersView: React.FC = () => {
                                         <button
                                             onClick={() => setDeletingId(user.id)}
                                             className="text-slate-400 hover:text-red-500 transition-colors p-2"
+                                            aria-label="Eliminar usuario"
                                             title="Eliminar usuario"
                                         >
                                             <Trash2 size={16} />
@@ -1541,8 +1543,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             title={isSidebarCollapsed ? "Carros" : ""}
                         >
                             <div className="flex items-center gap-3">
-                                <img src="/Carro%20dia-01.png" alt="Carros" className="w-6 h-6 dark:hidden object-contain" />
-                                <img src="/carro%20noche-01.png" alt="Carros" className="w-6 h-6 hidden dark:block object-contain" />
+                                <img src="/Carro%20dia-01.png" alt="Carros" className="w-8 h-8 dark:hidden object-contain" />
+                                <img src="/carro%20noche-01.png" alt="Carros" className="w-8 h-8 hidden dark:block object-contain" />
                                 {!isSidebarCollapsed && <span>Carros</span>}
                             </div>
                             {!isSidebarCollapsed && (isCartsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
@@ -1751,6 +1753,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             <div className="w-full md:w-64">
                                 <input
                                     type="text"
+                                    aria-label="Buscar aparataje"
                                     placeholder="Buscar aparataje..."
                                     className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400"
                                     value={equipmentMainSearch}
@@ -1818,7 +1821,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                 </h3>
                                                 <p className="text-sm text-slate-500 dark:text-slate-400">Gestión de aparataje médico</p>
                                             </div>
-                                            <button onClick={() => setIsCreating(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                            <button onClick={() => setIsCreating(false)} aria-label="Cerrar" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                                                 <X size={24} />
                                             </button>
                                         </div>
@@ -1839,8 +1842,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                                 {/* 2. Location */}
                                                 <div>
-                                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación</label>
+                                                    <label htmlFor="equipment-location-select" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación</label>
                                                     <select
+                                                        id="equipment-location-select"
                                                         className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                                         value={newEquipment.location || ''}
                                                         onChange={e => setNewEquipment({ ...newEquipment, location: e.target.value })}
@@ -1962,7 +1966,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-lg font-bold text-slate-900">Nueva Sub-ubicación</h3>
-                                    <button onClick={() => setSubLocationModal({ ...subLocationModal, isOpen: false })} className="text-slate-400 hover:text-slate-600">
+                                    <button onClick={() => setSubLocationModal({ ...subLocationModal, isOpen: false })} aria-label="Cancelar" className="text-slate-400 hover:text-slate-600">
                                         <X size={20} />
                                     </button>
                                 </div>
@@ -1996,7 +2000,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200 border dark:border-slate-800">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-lg font-bold dark:text-white">Editar Ubicación</h3>
-                                    <button onClick={() => setEditingLocation(null)} className="dark:text-slate-400 dark:hover:text-white"><X size={20} /></button>
+                                    <button onClick={() => setEditingLocation(null)} aria-label="Cerrar" className="dark:text-slate-400 dark:hover:text-white"><X size={20} /></button>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre</label>
@@ -2045,6 +2049,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                     <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative border dark:border-slate-800" onClick={e => e.stopPropagation()}>
                                         <button
                                             onClick={() => setViewingItem(null)}
+                                            aria-label="Cerrar"
                                             className={`absolute top-4 right-4 rounded-full p-1 transition-colors z-10 ${viewingItem.imageUrl ? 'bg-black/30 hover:bg-black/50 text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
                                         >
                                             <X size={20} />
@@ -2466,8 +2471,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación Stock General</label>
+                                                <label htmlFor="stock-location-select" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación Stock General</label>
                                                 <select
+                                                    id="stock-location-select"
                                                     className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                                     value={selectedParentLocation}
                                                     onChange={e => {
@@ -2490,8 +2496,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                             {selectedParentLocation && (
                                                 <div className="animate-in slide-in-from-top-2 duration-200">
-                                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación Secundaria (Fila/Armario)</label>
+                                                    <label htmlFor="stock-sublocation-select" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ubicación Secundaria (Fila/Armario)</label>
                                                     <select
+                                                        id="stock-sublocation-select"
                                                         className="w-full border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                                         value={selectedSubLocation}
                                                         onChange={e => setSelectedSubLocation(e.target.value)}
@@ -2598,6 +2605,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">{editingTechnique ? 'Editar Técnica' : 'Nueva Técnica'}</h2>
                                             <button
                                                 onClick={() => setIsCreating(false)}
+                                                aria-label="Cerrar"
                                                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 transition-colors"
                                             >
                                                 <X size={24} />
@@ -2758,7 +2766,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                 return (
                                                                     <div key={si.itemId} className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm">
                                                                         <div className="flex items-center gap-3 overflow-hidden">
-                                                                            <img src={item?.imageUrl} className="w-10 h-10 rounded-lg object-cover bg-slate-100 flex-shrink-0" />
+                                                                            <img src={item?.imageUrl} alt={item?.name || 'Material'} className="w-10 h-10 rounded-lg object-cover bg-slate-100 flex-shrink-0" />
                                                                             <div className="flex flex-col min-w-0">
                                                                                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{item?.name || 'Material sin nombre'}</span>
                                                                                 {itemLocations.length > 0 ? (
@@ -2814,7 +2822,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                 return (
                                                                     <div key={se.equipmentId} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm">
                                                                         <div className="flex items-center gap-2 overflow-hidden">
-                                                                            <img src={eq?.imageUrl} className="w-8 h-8 rounded object-cover bg-slate-100" />
+                                                                            <img src={eq?.imageUrl} alt={eq?.name || 'Equipo'} className="w-8 h-8 rounded object-cover bg-slate-100" />
                                                                             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{eq?.name || 'Equipo sin nombre'}</span>
                                                                         </div>
                                                                         <span className="bg-clinical-100 text-clinical-700 font-bold px-2 py-0.5 rounded text-xs">x{se.quantity}</span>
@@ -3394,7 +3402,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                     Editando contenido de: <span className="font-bold text-indigo-600 dark:text-indigo-400">{addMaterialData.targetLocationName}</span>
                                 </p>
                             </div>
-                            <button onClick={() => setAddMaterialData({ ...addMaterialData, isOpen: false })} className="text-slate-400 hover:text-slate-600">
+                            <button onClick={() => setAddMaterialData({ ...addMaterialData, isOpen: false })} aria-label="Cerrar" className="text-slate-400 hover:text-slate-600">
                                 <X size={24} />
                             </button>
                         </div>
@@ -3407,6 +3415,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                 </h4>
                                 <input
                                     type="text"
+                                    aria-label="Buscar material"
                                     className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-clinical-500 outline-none text-slate-900 dark:text-white placeholder-slate-400"
                                     placeholder="Buscar material..."
                                     value={addMaterialData.searchTerm}
@@ -3545,7 +3554,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">Seleccionar Materiales</h3>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Configura el kit para la técnica</p>
                                 </div>
-                                <button onClick={() => setItemSelectorOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                <button onClick={() => setItemSelectorOpen(false)} aria-label="Cerrar" className="text-slate-400 hover:text-slate-600">
                                     <X size={24} />
                                 </button>
                             </div>
@@ -3624,6 +3633,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                             </button>
                                                             <input
                                                                 type="number"
+                                                                aria-label="Cantidad"
                                                                 className="w-12 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-center text-sm focus:ring-1 focus:ring-clinical-500 outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                                                 value={si.quantity}
                                                                 onChange={(e) => updateTechItemQuantity(item.id, parseInt(e.target.value) || 1)}
@@ -3672,6 +3682,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                 </div>
                                 <button
                                     onClick={() => setViewingTechnique(null)}
+                                    aria-label="Cerrar"
                                     className="text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 sm:p-2 rounded-full transition-colors"
                                 >
                                     <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -3887,7 +3898,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             <div className="flex-1 bg-slate-100 relative">
                                 {protocolViewer.url ? (
                                     <iframe
-                                        src={protocolViewer.url}
+                                        src={`${protocolViewer.url}#toolbar=1&navpanes=1&scrollbar=1`}
                                         className="w-full h-full"
                                         title="Protocol Viewer"
                                     />
@@ -3925,7 +3936,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">Seleccionar Aparataje</h3>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Configura el aparataje necesario para la técnica</p>
                                 </div>
-                                <button onClick={() => setEquipmentSelectorOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                <button onClick={() => setEquipmentSelectorOpen(false)} aria-label="Cerrar" className="text-slate-400 hover:text-slate-600">
                                     <X size={24} />
                                 </button>
                             </div>
@@ -4011,6 +4022,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                             </button>
                                                             <button
                                                                 onClick={() => toggleTechEquipment(eq.id)}
+                                                                aria-label="Eliminar equipamiento"
                                                                 className="w-8 h-8 rounded bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 ml-2"
                                                             >
                                                                 <Trash2 size={16} />

@@ -44,6 +44,7 @@ export const TechniqueSelector: React.FC<TechniqueSelectorProps> = ({ techniques
           </div>
           <input
             type="text"
+            aria-label="Buscar técnicas"
             className="block w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg placeholder-slate-400 dark:text-white focus:outline-none focus:ring-2 focus:ring-clinical-500 focus:border-transparent shadow-sm"
             placeholder="Buscar por nombre (ej: Vía central)..."
 

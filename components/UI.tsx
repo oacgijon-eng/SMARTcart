@@ -81,7 +81,7 @@ export const PageHeader: React.FC<{ title: string; subtitle?: string; onBack?: (
 
       <div className="flex items-center gap-4">
         {onBack && (
-          <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+          <button onClick={onBack} aria-label="Volver" className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
 
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
           </button>
@@ -114,7 +114,7 @@ export const Modal: React.FC<{
       <div className={`bg-light-gray-blue dark:bg-night-card rounded-2xl shadow-xl w-full ${maxWidth} relative z-10 ${allowOverflow ? '' : 'overflow-hidden'} animate-in fade-in zoom-in-95 duration-200`}>
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
           <h3 className="font-bold font-heading text-lg text-deep-blue dark:text-white">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400">
+          <button onClick={onClose} aria-label="Cerrar" className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400">
 
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
           </button>

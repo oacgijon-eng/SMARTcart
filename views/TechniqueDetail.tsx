@@ -469,6 +469,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
             <input
               type="text"
+              aria-label="Buscar material adicional"
               placeholder="Buscar material..."
               className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-clinical-500 outline-none"
               value={searchQuery}

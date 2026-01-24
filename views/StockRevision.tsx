@@ -216,6 +216,7 @@ export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations,
             <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 px-4 py-4 flex items-center gap-4 shadow-sm">
                 <button
                     onClick={onBack}
+                    aria-label="Volver"
                     title="Volver"
                     className="p-2 -ml-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                 >

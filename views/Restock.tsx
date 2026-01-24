@@ -336,6 +336,7 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                                                 <button
                                                     onClick={() => updateExtraQuantity(itemId, -qty)} // Remove item completely
                                                     className="p-2 text-slate-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
+                                                    aria-label="Eliminar material adicional"
                                                     title="Eliminar material adicional"
                                                 >
                                                     <X size={20} />
@@ -427,9 +428,10 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* 2. Incident Dropdown */}
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">¿Hubo algún problema?</label>
+                                <label htmlFor="issue-select" className="block text-sm font-medium text-slate-700 dark:text-slate-300">¿Hubo algún problema?</label>
                                 <div className="relative">
                                     <select
+                                        id="issue-select"
                                         value={issue}
                                         onChange={(e) => setIssue(e.target.value)}
                                         className="w-full appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-lg rounded-xl focus:ring-clinical-500 focus:border-clinical-500 block p-4 pr-10"
