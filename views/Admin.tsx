@@ -1419,14 +1419,12 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     // alert(`Debug: Procesando en background (v5)...\nArchivo: ${fileRef.name}`);
                     if (fileRef.size > 20 * 1024 * 1024) throw new Error("Imagen > 20MB. Usa menor resolución.");
 
-                    const objectUrl = URL.createObjectURL(fileRef);
-
-                    // Resize (accepts URL now)
-                    const resized = await resizeImage(objectUrl, 600, 600, 0.7);
+                    // Resize (accepts Blob directly now for better memory usage)
+                    const resized = await resizeImage(fileRef, 600, 600, 0.7);
                     setImagePreview(resized);
 
                     // Cleanup
-                    URL.revokeObjectURL(objectUrl);
+                    // URL.revokeObjectURL(objectUrl); // No longer creating it here
                 } catch (err: any) {
                     console.error("Error handling image:", err);
 

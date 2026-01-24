@@ -8,22 +8,20 @@
  * @returns A promise that resolves to the resized base64 string.
  */
 export async function resizeImage(
-    dataUrl: string,
-    maxWidth: number = 600, // Reduced from 800 for safety on tablets
+    source: string | Blob | File,
+    maxWidth: number = 600,
     maxHeight: number = 600,
     quality: number = 0.7
 ): Promise<string> {
-    return new Promise((resolve, reject) => {
-        console.log("Starting image resize. Input length:", dataUrl.length);
-        const img = new Image();
-        // img.crossOrigin = "anonymous"; // Removed for local base64 consistency
+    // Modern Browser Approach: Use createImageBitmap (Highly efficient & low memory)
+    if (typeof createImageBitmap === 'function' && (source instanceof Blob || source instanceof File)) {
+        try {
+            console.log("Using createImageBitmap optimization...");
+            const bitmap = await createImageBitmap(source);
 
-        img.onload = () => {
-            let width = img.width;
-            let height = img.height;
-            console.log("Original dimensions:", width, "x", height);
+            let width = bitmap.width;
+            let height = bitmap.height;
 
-            // Calculate new dimensions while maintaining aspect ratio
             if (width > height) {
                 if (width > maxWidth) {
                     height *= maxWidth / width;
@@ -36,29 +34,70 @@ export async function resizeImage(
                 }
             }
 
-            console.log("New dimensions:", width, "x", height);
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+
+            if (ctx) {
+                ctx.drawImage(bitmap, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL("image/jpeg", quality);
+                bitmap.close(); // Important: Release memory immediately
+                return dataUrl;
+            }
+        } catch (e) {
+            console.warn("createImageBitmap failed, falling back to legacy resize...", e);
+        }
+    }
+
+    // Legacy / String Fallback
+    return new Promise((resolve, reject) => {
+        const dataUrl = (typeof source === 'string')
+            ? source
+            : URL.createObjectURL(source);
+
+        console.log("Starting legacy image resize. Input type:", typeof source);
+        const img = new Image();
+
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
 
             const canvas = document.createElement("canvas");
             canvas.width = width;
             canvas.height = height;
-
             const ctx = canvas.getContext("2d");
+
             if (!ctx) {
                 reject(new Error("Could not get canvas context"));
                 return;
             }
 
             ctx.drawImage(img, 0, 0, width, height);
-
-            // Convert to base64 with quality compression
             const resizedDataUrl = canvas.toDataURL("image/jpeg", quality);
-            console.log("Resizing complete. Output length:", resizedDataUrl.length);
-            // alert(`Debug: Imagen redimensionada\nOriginal: ${width}x${height}\nSize: ${Math.round(resizedDataUrl.length/1024)}KB`);
+
+            // Clean up if we created a URL
+            if (typeof source !== 'string') {
+                URL.revokeObjectURL(dataUrl);
+            }
+
             resolve(resizedDataUrl);
         };
 
         img.onerror = (e) => {
-            console.error("Image loading error for resize", e);
+            console.error("Image loading error", e);
             reject(new Error("Error loading image for resizing"));
         };
 
