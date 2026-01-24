@@ -57,8 +57,17 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
         <div className="text-center animate-fade-in-up">
           {/* Logo - Toggle based on Dark Mode */}
           <div className="flex justify-center">
-            <img src="/SMARTcart Logo dia.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto dark:hidden transition-all duration-500" />
-            <img src="/SMARTcart logo noche.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto hidden dark:block transition-all duration-500" />
+            {isInfoModalOpen ? (
+              <>
+                <img src="/Texto SMARTcart dia-01.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto dark:hidden transition-all duration-500" />
+                <img src="/Texto SMARTcart noche-01.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto hidden dark:block transition-all duration-500" />
+              </>
+            ) : (
+              <>
+                <img src="/SMARTcart Logo dia.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto dark:hidden transition-all duration-500" />
+                <img src="/SMARTcart logo noche.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto hidden dark:block transition-all duration-500" />
+              </>
+            )}
           </div>
           <div className="-mt-20">
             <p className="text-slate-500 dark:text-slate-400 text-lg">Asistente de Carros de Técnicas</p>
