@@ -3360,9 +3360,9 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             </button>
                         </div>
 
-                        <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden min-h-0">
+                        <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden min-h-0">
                             {/* LEFT COLUMN: Available Materials */}
-                            <div className="flex-1 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 pb-4 md:pb-0 md:pr-6">
+                            <div className="flex-1 flex flex-col min-h-0 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800 pb-4 lg:pb-0 lg:pr-6">
                                 <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-2">
                                     <List size={18} /> Disponibles
                                 </h4>
