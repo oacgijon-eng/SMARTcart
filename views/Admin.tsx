@@ -2363,7 +2363,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                     <input
                                                         type="file"
                                                         accept="image/*"
-                                                        // capture="environment" // REMOVED: Causes crash/reload on some Androids
+                                                        capture="environment"
                                                         className="hidden"
                                                         ref={cameraInputRef}
                                                         onChange={handleImageChange}
