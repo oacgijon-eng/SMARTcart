@@ -3207,7 +3207,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                 <Card className="overflow-hidden">
                                     <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-sm">
+                                        <table className="w-full min-w-[1000px] text-left text-sm">
                                             <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                                                 <tr>
                                                     <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Fecha</th>
@@ -3355,10 +3355,10 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                 }
                                                             </td>
                                                             <td className="px-4 sm:px-6 py-3 sm:py-4">
-                                                                <span className={`px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${row.type === 'INCIDENCE' ? 'bg-red-100 text-red-700' :
-                                                                    row.type === 'RATING' ? 'bg-indigo-100 text-indigo-700' :
-                                                                        row.type === 'SUGGESTION' ? 'bg-amber-100 text-amber-700' :
-                                                                            'bg-slate-100 text-slate-700'
+                                                                <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${row.type === 'INCIDENCE' ? 'text-red-700' :
+                                                                    row.type === 'RATING' ? 'text-indigo-700' :
+                                                                        row.type === 'SUGGESTION' ? 'text-amber-700' :
+                                                                            'text-slate-700'
                                                                     }`}>
                                                                     {row.category || (
                                                                         row.type === 'INCIDENCE' ? 'Incidencia' :
