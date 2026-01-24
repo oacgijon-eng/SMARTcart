@@ -3435,7 +3435,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                         </button>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                                    <div className="grid grid-cols-2 gap-3">
                                                         <div>
                                                             <label className="block text-xs font-medium text-slate-500 mb-1">Stock Ideal</label>
                                                             <div className="flex items-center">
