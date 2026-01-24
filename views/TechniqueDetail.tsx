@@ -421,7 +421,8 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
 
                       // Recursively find if it belongs to a CART
                       const isCartLocation = (l: any): boolean => {
-                        if (l.type === 'CART') return true;
+                        const type = (l.type || '').toUpperCase();
+                        if (type === 'CART') return true;
                         if (l.parent_id) {
                           const parent = locations.find(p => p.id === l.parent_id);
                           return parent ? isCartLocation(parent) : false;

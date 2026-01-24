@@ -29,7 +29,7 @@ export function useLocations(unitId?: string) {
                 .order('name');
 
             if (unitId) {
-                query = query.eq('unit_id', unitId);
+                query = query.or(`unit_id.eq.${unitId},unit_id.is.null`);
             }
 
             const { data, error } = await query;
