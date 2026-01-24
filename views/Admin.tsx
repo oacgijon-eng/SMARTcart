@@ -3414,66 +3414,74 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                         <p>Selecciona materiales a la izquierda</p>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                                        {Object.entries(addMaterialData.selectedItems).map(([itemId, rawData]) => {
-                                            const data = rawData as { stockIdeal: number; nextExpiryDate: string };
-                                            const item = inventory.find(i => i.id === itemId);
-                                            if (!item) return null;
-                                            return (
-                                                <div key={itemId} className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3 overflow-hidden">
-                                                            {item.imageUrl && <img src={item.imageUrl} className="w-8 h-8 rounded bg-slate-100 dark:bg-slate-700 object-cover" alt="" />}
-                                                            <span className="font-medium text-slate-800 dark:text-slate-200 text-sm truncate">{item.name}</span>
-                                                        </div>
+                                    <div className="flex-1 overflow-y-auto p-1">
+                                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                                            {Object.entries(addMaterialData.selectedItems).map(([itemId, rawData]) => {
+                                                const data = rawData as { stockIdeal: number; nextExpiryDate: string };
+                                                const item = inventory.find(i => i.id === itemId);
+                                                if (!item) return null;
+                                                return (
+                                                    <div key={itemId} className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col gap-3 relative group hover:border-clinical-200 dark:hover:border-clinical-700 transition-colors">
                                                         <button
                                                             onClick={() => toggleMaterialSelection(itemId)}
-                                                            className="text-slate-400 hover:text-red-500 transition-colors"
+                                                            className="absolute top-2 right-2 text-slate-300 hover:text-red-500 transition-colors bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100"
                                                             title="Eliminar"
                                                         >
                                                             <Trash2 size={16} />
                                                         </button>
-                                                    </div>
 
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <div>
-                                                            <label className="block text-xs font-medium text-slate-500 mb-1">Stock Ideal</label>
-                                                            <div className="flex items-center">
-                                                                <button
-                                                                    onClick={() => updateSelectedMaterial(itemId, 'stockIdeal', Math.max(1, data.stockIdeal - 1))}
-                                                                    className="w-8 h-8 rounded-l border border-r-0 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600"
-                                                                >
-                                                                    -
-                                                                </button>
-                                                                <input
-                                                                    type="number"
-                                                                    value={data.stockIdeal}
-                                                                    onChange={e => updateSelectedMaterial(itemId, 'stockIdeal', parseInt(e.target.value) || 1)}
-                                                                    className="w-12 h-8 border-y border-slate-200 dark:border-slate-600 text-center text-sm outline-none dark:bg-slate-800 dark:text-white"
-                                                                />
-                                                                <button
-                                                                    onClick={() => updateSelectedMaterial(itemId, 'stockIdeal', data.stockIdeal + 1)}
-                                                                    className="w-8 h-8 rounded-r border border-l-0 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600"
-                                                                >
-                                                                    +
-                                                                </button>
-                                                            </div>
+                                                        <div className="flex flex-col items-center text-center gap-2 mt-2">
+                                                            {item.imageUrl ? (
+                                                                <img src={item.imageUrl} className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 object-cover shadow-sm" alt="" />
+                                                            ) : (
+                                                                <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                                                                    <Package size={24} className="text-slate-300" />
+                                                                </div>
+                                                            )}
+                                                            <span className="font-bold text-slate-800 dark:text-slate-200 text-xs line-clamp-2 min-h-[2.5em]">{item.name}</span>
                                                         </div>
-                                                        {addMaterialData.locationType === 'CART' && (
+
+                                                        <div className="space-y-2 mt-auto">
                                                             <div>
-                                                                <label className="block text-xs font-medium text-slate-500 mb-1">Caducidad</label>
-                                                                <input
-                                                                    type="date"
-                                                                    value={data.nextExpiryDate}
-                                                                    onChange={e => updateSelectedMaterial(itemId, 'nextExpiryDate', e.target.value)}
-                                                                    className="w-full max-w-[150px] h-8 border border-slate-200 dark:border-slate-700 rounded px-2 text-xs outline-none focus:border-clinical-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                                                                />
+                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-center">Stock Ideal</label>
+                                                                <div className="flex items-center justify-center">
+                                                                    <button
+                                                                        onClick={() => updateSelectedMaterial(itemId, 'stockIdeal', Math.max(1, data.stockIdeal - 1))}
+                                                                        className="w-8 h-8 rounded-l border border-r-0 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600"
+                                                                    >
+                                                                        -
+                                                                    </button>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={data.stockIdeal}
+                                                                        onChange={e => updateSelectedMaterial(itemId, 'stockIdeal', parseInt(e.target.value) || 1)}
+                                                                        className="w-10 h-8 border-y border-slate-200 dark:border-slate-600 text-center text-sm outline-none dark:bg-slate-800 dark:text-white"
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => updateSelectedMaterial(itemId, 'stockIdeal', data.stockIdeal + 1)}
+                                                                        className="w-8 h-8 rounded-r border border-l-0 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600"
+                                                                    >
+                                                                        +
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                        )}
+
+                                                            {addMaterialData.locationType === 'CART' && (
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-center">Caducidad</label>
+                                                                    <input
+                                                                        type="date"
+                                                                        value={data.nextExpiryDate}
+                                                                        onChange={e => updateSelectedMaterial(itemId, 'nextExpiryDate', e.target.value)}
+                                                                        className="w-full h-8 border border-slate-200 dark:border-slate-700 rounded px-2 text-xs outline-none focus:border-clinical-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-center"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )}
                             </div>
