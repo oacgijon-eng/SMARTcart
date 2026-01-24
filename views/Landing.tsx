@@ -18,10 +18,10 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
   const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-night-bg flex flex-col items-center justify-center p-6 relative transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-night-bg flex flex-col p-6 relative transition-colors duration-300 overflow-x-hidden">
 
       {/* Top Bar Actions */}
-      <div className="absolute top-6 left-6 right-6 flex justify-between items-start pt-[env(safe-area-inset-top)]">
+      <div className="absolute top-6 left-6 right-6 flex justify-between items-start pt-[env(safe-area-inset-top)] z-20">
         <div className="flex gap-3">
           <button
             onClick={toggleTheme}
@@ -49,18 +49,19 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
         </button>
       </div>
 
-      <div className="w-full max-w-md text-center space-y-12">
+      {/* Main Content Wrapper - Centers content but respects flow */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto space-y-10 pb-16 pt-20">
 
 
         {/* Logo Area */}
-        <div className="space-y-4 animate-fade-in-up">
+        <div className="space-y-1 text-center animate-fade-in-up">
           {/* Logo - Toggle based on Dark Mode */}
           <div className="flex justify-center">
             <img src="/SMARTcart Logo dia.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto dark:hidden transition-all duration-500" />
             <img src="/SMARTcart logo noche.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto hidden dark:block transition-all duration-500" />
           </div>
           <div>
-            <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Asistente de Carros de Técnicas</p>
+            <p className="text-slate-500 dark:text-slate-400 text-lg">Asistente de Carros de Técnicas</p>
             {unitName && (
               <p className="mt-2 text-sm font-medium text-clinical-600 dark:text-clinical-400 bg-clinical-50 dark:bg-clinical-900/30 px-3 py-1 rounded-full inline-block">
                 {unitName}
@@ -70,7 +71,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
 
         </div>
 
-        {/* Main Action */}
+        {/* Main ActionButtons */}
         <div className="w-full space-y-4">
           <Button
             onClick={onNurseStart}
@@ -140,8 +141,8 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
         </div>
       </Modal>
 
-      {/* Footer / Development Notice */}
-      <div className="absolute bottom-6 left-6 right-6 text-center animate-fade-in" style={{ animationDelay: '500ms' }}>
+      {/* Footer / Development Notice - Now flows naturally */}
+      <div className="mt-auto pt-6 text-center animate-fade-in" style={{ animationDelay: '500ms' }}>
         <p className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 max-w-xs mx-auto leading-relaxed">
           <span className="font-semibold opacity-70">Proyecto en Desarrollo:</span> Esta aplicación es parte de un Trabajo de Fin de Máster.
           Agradezco tu colaboración reportando errores o sugerencias a: <a href="mailto:oacgijon@gmail.com" className="hover:text-clinical-500 transition-colors">oacgijon@gmail.com</a>

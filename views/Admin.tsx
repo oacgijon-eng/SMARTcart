@@ -3223,7 +3223,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                             <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Valor/Estado</th>
                                                             <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400 hidden sm:table-cell">Técnica</th>
                                                             <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400">Incidencia</th>
-                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">Descripción</th>
+                                                            <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-slate-600 dark:text-slate-400 text-left">Descripción</th>
                                                         </>
                                                     )}
                                                 </tr>
@@ -3367,7 +3367,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                                     )}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-900 min-w-[120px] sm:min-w-[200px] text-right">
+                                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-900 min-w-[120px] sm:min-w-[200px] text-left">
                                                                 <p className="font-medium text-xs sm:text-sm line-clamp-2 sm:line-clamp-none">{row.description}</p>
                                                                 {row.category && <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase mt-0.5 sm:mt-1">{row.category}</p>}
                                                             </td>
