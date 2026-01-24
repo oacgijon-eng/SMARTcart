@@ -1402,19 +1402,20 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        // ALERT 1: Entry
-        alert("Debug: Evento de imagen detectado");
+        try {
+            // ALERT 1: Entry
+            alert("Debug: Evento de imagen detectado v2");
 
-        const file = e.target.files?.[0];
-        if (!file) {
-            alert("Debug: No hay archivo seleccionado (file is null)");
-            return;
-        }
+            const file = e.target.files?.[0];
+            if (!file) {
+                alert("Debug: No hay archivo seleccionado (file is null)");
+                return;
+            }
 
-        // ALERT 2: File Info
-        alert(`Debug: Archivo recibido. Nombre: ${file.name}, Tipo: ${file.type}, Tamaño: ${Math.round(file.size / 1024)}KB`);
+            // ALERT 2: File Info
+            alert(`Debug: Archivo recibido. Nombre: ${file.name}, Tipo: ${file.type}, Tamaño: ${Math.round(file.size / 1024)}KB`);
 
-        if (file) {
+            // if (file) check removed as we use try-catch checks above
             try {
                 // Optimization: Use ObjectURL instead of FileReader for memory efficiency
                 // This prevents reading the entire 10MB+ file into a base64 string before resizing
