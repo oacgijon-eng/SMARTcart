@@ -1405,7 +1405,6 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         try {
             // START: Image Processing
-            alert("Imagen recibida. Iniciando..."); // Sync check to see if app reloaded
 
             // Minimal synchronous check
             if (!e.target.files || e.target.files.length === 0) return;
@@ -2388,7 +2387,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                             className="gap-2 h-12 bg-slate-50 dark:bg-slate-800"
                                                         >
                                                             <Camera size={18} />
-                                                            <span className="text-xs sm:text-sm">Cámara (v7)</span>
+                                                            <span className="text-xs sm:text-sm">Cámara</span>
                                                         </Button>
                                                     </div>
                                                 </div>
