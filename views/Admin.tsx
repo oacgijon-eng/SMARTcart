@@ -3467,13 +3467,13 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                             </div>
 
                                                             {addMaterialData.locationType === 'CART' && (
-                                                                <div>
+                                                                <div className="flex flex-col items-center">
                                                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-center">Caducidad</label>
                                                                     <input
                                                                         type="date"
                                                                         value={data.nextExpiryDate}
                                                                         onChange={e => updateSelectedMaterial(itemId, 'nextExpiryDate', e.target.value)}
-                                                                        className="w-full h-8 border border-slate-200 dark:border-slate-700 rounded px-2 text-xs outline-none focus:border-clinical-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-center"
+                                                                        className="w-[125px] h-8 border border-slate-200 dark:border-slate-700 rounded px-2 text-xs outline-none focus:border-clinical-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-center"
                                                                     />
                                                                 </div>
                                                             )}
