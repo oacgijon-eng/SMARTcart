@@ -115,8 +115,9 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
         maxWidth="max-w-lg"
       >
         <div className="space-y-6">
-          <div className="w-16 h-16 bg-clinical-100 dark:bg-clinical-900/30 rounded-2xl flex items-center justify-center text-clinical-600 dark:text-clinical-400 mx-auto">
-            <Activity size={32} />
+          <div className="w-full flex justify-center mb-6">
+            <img src="/Texto SMARTcart dia-01.png" alt="SMARTcart" className="h-16 w-auto dark:hidden" />
+            <img src="/Texto SMARTcart noche-01.png" alt="SMARTcart" className="h-16 w-auto hidden dark:block" />
           </div>
 
           <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed">
