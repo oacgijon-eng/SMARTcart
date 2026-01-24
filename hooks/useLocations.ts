@@ -23,15 +23,10 @@ export function useLocations(unitId?: string) {
     async function fetchLocations() {
         try {
             setLoading(true);
-            let query = supabase
+            const { data, error } = await supabase
                 .from('locations')
                 .select('*')
                 .order('name');
-
-            // Fetching all locations for the prototype. RLS now allows read for all.
-            // This ensures both unit-specific and global warehouse locations are visible.
-
-            const { data, error } = await query;
 
             if (error) throw error;
             setLocations(data as Location[]);
@@ -68,20 +63,15 @@ export function useLocations(unitId?: string) {
 
     async function deleteLocation(id: string) {
         try {
-            // Manual Cascade: Delete children first
-            // Note: This requires 'parent_id' to be visible in the API.
-            // If the DB has ON DELETE CASCADE, this is redundant but safe.
             const { data: children } = await supabase
                 .from('locations')
                 .select('id')
                 .eq('parent_id', id);
 
             if (children && children.length > 0) {
-                // Recursively delete children
                 await Promise.all(children.map(child => deleteLocation(child.id)));
             }
 
-            // Delete the location itself
             const { error } = await supabase
                 .from('locations')
                 .delete()
