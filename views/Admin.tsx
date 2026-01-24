@@ -1421,7 +1421,13 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                     // Resize (accepts Blob directly now for better memory usage)
                     const resized = await resizeImage(fileRef, 600, 600, 0.7);
-                    setImagePreview(resized);
+
+                    if (!resized) {
+                        alert("Error: El redimensionado devolvió vacio.");
+                    } else {
+                        // alert(`Debug: Imagen procesada OK. Longitud: ${resized.length}`);
+                        setImagePreview(resized);
+                    }
 
                     // Cleanup
                     // URL.revokeObjectURL(objectUrl); // No longer creating it here
