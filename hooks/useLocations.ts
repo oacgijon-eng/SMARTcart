@@ -28,9 +28,8 @@ export function useLocations(unitId?: string) {
                 .select('*')
                 .order('name');
 
-            if (unitId) {
-                query = query.or(`unit_id.eq.${unitId},unit_id.is.null`);
-            }
+            // Fetching all locations for the prototype. RLS now allows read for all.
+            // This ensures both unit-specific and global warehouse locations are visible.
 
             const { data, error } = await query;
 

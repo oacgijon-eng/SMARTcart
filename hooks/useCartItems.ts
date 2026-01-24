@@ -189,12 +189,10 @@ export function useGlobalCartItems(unitId?: string) {
                 .select(`
                     id, location_id, item_id, stock_ideal, next_expiry_date,
                     items (id, name, category, image_url),
-                    locations!inner(unit_id)
+                    locations(unit_id)
                 `);
 
-            if (unitId) {
-                query = query.or(`unit_id.eq.${unitId},unit_id.is.null`, { foreignTable: 'locations' });
-            }
+            // Fetching all assignments for the prototype to ensure Warehouse items are included.
 
             const { data, error } = await query;
 
