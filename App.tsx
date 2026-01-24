@@ -112,9 +112,6 @@ const AppContent: React.FC = () => {
   // Effect to handle single unit architecture (automatic selection/creation)
   React.useEffect(() => {
     const initUnit = async () => {
-      // If we already have a unit ID, we're good
-      if (selectedUnitId) return;
-
       // If we are in the middle of a login, don't interfere
       if (view === 'ADMIN_LOGIN') return;
 
@@ -123,6 +120,19 @@ const AppContent: React.FC = () => {
 
       try {
         console.log("Single Unit Init: Checking existing units...");
+
+        // Validation: If we have a selectedUnitId, verify it exists in the loaded units
+        let effectiveUnitId = selectedUnitId;
+        if (selectedUnitId && units && units.length > 0) {
+          const isValid = units.find(u => u.id === selectedUnitId);
+          if (!isValid) {
+            console.warn(`Stored Unit ID ${selectedUnitId} not found in database. Resetting.`);
+            effectiveUnitId = null; // Force re-selection
+          }
+        }
+
+        if (effectiveUnitId) return; // We have a valid unit selected
+
         if (units && units.length > 0) {
           // Auto-select the first available unit
           const firstUnit = units[0];
