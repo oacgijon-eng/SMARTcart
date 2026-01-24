@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { PageHeader, Button, Card } from '../components/UI';
 import { CartView } from '../components/CartView';
 import { Item, Technique, Equipment } from '../types';
-import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Package, FilePlus, Settings, LogOut, Plus, Camera, Sparkles, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, ChevronLeft, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck, RefreshCw } from 'lucide-react';
 
 import { supabase } from '../services/supabase';
 import { Location } from '../hooks/useLocations';
@@ -539,6 +539,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const [isRegistrosOpen, setIsRegistrosOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isTabSelectorOpen, setIsTabSelectorOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     // Material Creation/Edit State - Now received from props
     // const {createItem, updateItem, deleteItem} = useItems();
@@ -1509,26 +1510,41 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                 {/* Sidebar / Tabs */}
                 <div className={`
-                    fixed md:relative inset-y-0 left-0 w-72 md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
-                    flex flex-col z-50 transform transition-transform duration-300 ease-in-out
+                    fixed md:relative inset-y-0 left-0 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'} w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
+                    flex flex-col z-50 transform transition-all duration-300 ease-in-out
                     ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-                    md:translate-x-0 md:static transition-colors shrink-0
+                    md:translate-x-0 md:static shrink-0
                 `}>
+                    {/* Toggle Button (Desktop only) */}
+                    <div className="hidden md:flex justify-end p-2 border-b border-transparent">
+                        <button
+                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            {isSidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                        </button>
+                    </div>
+
                     {/* 1. Carros Dropdown */}
                     <div className="border-b md:border-b-0 border-transparent transition-all">
                         <button
-                            onClick={() => setIsCartsOpen(!isCartsOpen)}
-                            className={`w-full flex items-center justify-between px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap
+                            onClick={() => {
+                                if (isSidebarCollapsed) setIsSidebarCollapsed(false);
+                                setIsCartsOpen(!isCartsOpen);
+                            }}
+                            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-6'} py-4 text-sm font-medium transition-colors whitespace-nowrap
                             ${activeTab === 'CART' ? 'text-clinical-700 bg-clinical-50/50 dark:text-clinical-400 dark:bg-clinical-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                            title={isSidebarCollapsed ? "Carros" : ""}
                         >
                             <div className="flex items-center gap-3">
-                                <MapPin size={18} /> Carros
+                                <MapPin size={18} />
+                                {!isSidebarCollapsed && <span>Carros</span>}
                             </div>
-                            {isCartsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                            {!isSidebarCollapsed && (isCartsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
                         </button>
 
                         {isCartsOpen && (
-                            <div className="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/50 flex flex-col">
+                            <div className={`bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/50 flex flex-col ${isSidebarCollapsed ? 'hidden' : ''}`}>
                                 {savedLocations
                                     .filter(l => l.type === 'CART' && !l.parent_id)
                                     .sort((a, b) => a.name.localeCompare(b.name))
@@ -1558,54 +1574,68 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     {/* 2. Inventario */}
                     <button
                         onClick={() => { setActiveTab('INVENTORY'); setIsCreating(false); setIsMobileMenuOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
+                        className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-6'} py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'INVENTORY' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        title={isSidebarCollapsed ? "Inventario" : ""}
                     >
-                        <Package size={18} /> Inventario
+                        <Package size={18} />
+                        {!isSidebarCollapsed && <span>Inventario</span>}
                     </button>
 
                     {/* 3. Aparataje */}
                     <button
                         onClick={() => { setActiveTab('EQUIPMENT'); setIsCreating(false); setIsMobileMenuOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
+                        className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-6'} py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'EQUIPMENT' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        title={isSidebarCollapsed ? "Aparataje" : ""}
                     >
-                        <Monitor size={18} /> Aparataje
+                        <Monitor size={18} />
+                        {!isSidebarCollapsed && <span>Aparataje</span>}
                     </button>
 
                     {/* 3.1 Ubicaciones */}
                     <button
                         onClick={() => { setActiveTab('LOCATIONS'); setIsCreating(false); setIsMobileMenuOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
+                        className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-6'} py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'LOCATIONS' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        title={isSidebarCollapsed ? "Ubicaciones" : ""}
                     >
-                        <Building2 size={18} /> Ubicaciones
+                        <Building2 size={18} />
+                        {!isSidebarCollapsed && <span>Ubicaciones</span>}
                     </button>
 
                     {/* 4. Técnicas */}
                     <button
                         onClick={() => { setActiveTab('TECHNIQUES'); setIsCreating(false); setIsMobileMenuOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
+                        className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-6'} py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'TECHNIQUES' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        title={isSidebarCollapsed ? "Técnicas" : ""}
                     >
-                        <FilePlus size={18} /> Técnicas
+                        <FilePlus size={18} />
+                        {!isSidebarCollapsed && <span>Técnicas</span>}
                     </button>
 
                     {/* 5. Registros Dropdown */}
                     <div className="border-b md:border-b-0 border-transparent">
                         <button
-                            onClick={() => { setIsRegistrosOpen(!isRegistrosOpen); setActiveTab('REGISTROS'); }}
-                            className={`w-full flex items-center justify-between px-6 py-4 text-sm font-medium transition-colors whitespace-nowrap
+                            onClick={() => {
+                                if (isSidebarCollapsed) setIsSidebarCollapsed(false);
+                                setIsRegistrosOpen(!isRegistrosOpen);
+                                setActiveTab('REGISTROS');
+                            }}
+                            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-6'} py-4 text-sm font-medium transition-colors whitespace-nowrap
                             ${['REGISTROS', 'REGISTROS_STOCK', 'REGISTROS_FEEDBACK'].includes(activeTab) ? 'text-clinical-700 bg-clinical-50/50 dark:text-clinical-400 dark:bg-clinical-900/10' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                            title={isSidebarCollapsed ? "Registros" : ""}
                         >
                             <div className="flex items-center gap-3">
-                                <ClipboardList size={18} /> Registros
+                                <ClipboardList size={18} />
+                                {!isSidebarCollapsed && <span>Registros</span>}
                             </div>
-                            {isRegistrosOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                            {!isSidebarCollapsed && (isRegistrosOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
                         </button>
 
                         {isRegistrosOpen && (
-                            <div className="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/50 flex flex-col">
+                            <div className={`bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/50 flex flex-col ${isSidebarCollapsed ? 'hidden' : ''}`}>
                                 <button
                                     onClick={() => { setActiveTab('REGISTROS_STOCK'); setIsCreating(false); setIsMobileMenuOpen(false); }}
                                     className={`flex items-center gap-3 pl-12 pr-6 py-3 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap text-left
@@ -1627,20 +1657,24 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                     {/* 6. Usuarios */}
                     <button
                         onClick={() => { setActiveTab('USERS'); setIsCreating(false); setIsMobileMenuOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
+                        className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-6'} py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'USERS' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        title={isSidebarCollapsed ? "Usuarios" : ""}
                     >
-                        <Users size={18} /> Usuarios
+                        <Users size={18} />
+                        {!isSidebarCollapsed && <span>Usuarios</span>}
                     </button>
 
 
                     {/* 7. Ajustes */}
                     <button
                         onClick={() => { setActiveTab('SETTINGS'); setIsCreating(false); setIsMobileMenuOpen(false); }}
-                        className={`flex items-center gap-3 px-6 py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
+                        className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-6'} py-4 text-sm font-medium md:border-l-4 transition-colors whitespace-nowrap
                         ${activeTab === 'SETTINGS' ? 'bg-clinical-50 text-clinical-700 border-clinical-600 dark:bg-clinical-900/10 dark:text-clinical-400 dark:border-clinical-500' : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        title={isSidebarCollapsed ? "Ajustes" : ""}
                     >
-                        <Settings size={18} /> Ajustes
+                        <Settings size={18} />
+                        {!isSidebarCollapsed && <span>Ajustes</span>}
                     </button>
                 </div>
 
