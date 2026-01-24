@@ -60,7 +60,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
             <img src="/SMARTcart Logo dia.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto dark:hidden transition-all duration-500" />
             <img src="/SMARTcart logo noche.png" alt="SMARTcart" className="h-80 md:h-[500px] w-auto hidden dark:block transition-all duration-500" />
           </div>
-          <div className="-mt-6">
+          <div className="-mt-14">
             <p className="text-slate-500 dark:text-slate-400 text-lg">Asistente de Carros de Técnicas</p>
             {unitName && (
               <p className="mt-2 text-sm font-medium text-clinical-600 dark:text-clinical-400 bg-clinical-50 dark:bg-clinical-900/30 px-3 py-1 rounded-full inline-block">
