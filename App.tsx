@@ -47,10 +47,10 @@ const AppContent: React.FC = () => {
 
   const { items, loading: itemsLoading, error: itemsError, refreshItems, createItem, updateItem, deleteItem } = useItems();
   const { techniques, loading: techniquesLoading, error: techniquesError, refreshTechniques, createTechnique, updateTechnique, deleteTechnique } = useTechniques();
-  const { locations, fetchLocations: refreshLocations, createLocation, updateLocation, deleteLocation } = useLocations(selectedUnitId || undefined);
-  const { allItems: cartContents, refresh: refreshCartContents } = useGlobalCartItems();
+  const { locations, loading: locationsLoading, error: locationsError, fetchLocations: refreshLocations, createLocation, updateLocation, deleteLocation } = useLocations(selectedUnitId || undefined);
+  const { allItems: cartContents, loading: cartLoading, refresh: refreshCartContents } = useGlobalCartItems();
   const { units, loading: unitsLoading, createUnit } = useUnits();
-  const { equipment, refreshEquipment, createEquipment, updateEquipment, deleteEquipment } = useEquipment(selectedUnitId || undefined);
+  const { equipment, loading: equipmentLoading, refreshEquipment, createEquipment, updateEquipment, deleteEquipment } = useEquipment(selectedUnitId || undefined);
 
   // Auth Hook
   const { session, signIn, signOut } = useAuth();
@@ -170,137 +170,154 @@ const AppContent: React.FC = () => {
 
       {/* Main Content Render */}
       <div className="w-full">
-        <>
-          {view === 'LANDING' && (
-            <Landing
-              onNurseStart={handleNurseStart}
-              onAdminStart={handleAdminStart}
-              onStockRevisionStart={handleStockRevisionStart}
-              unitName={selectedUnit || undefined}
-              onChangeUnit={handleChangeUnit}
-            />
-          )}
+        {itemsLoading || techniquesLoading || unitsLoading || locationsLoading || cartLoading ? (
+          <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-clinical-600"></div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Cargando datos del sistema...</p>
+            </div>
+          </div>
+        ) : itemsError || techniquesError || locationsError ? (
+          <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-2">Error al cargar datos</h2>
+              <p className="text-slate-500 mb-6">{itemsError || techniquesError || locationsError}</p>
+              <button onClick={() => window.location.reload()} className="w-full py-3 bg-clinical-600 text-white rounded-xl font-bold">Reintentar</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {view === 'LANDING' && (
+              <Landing
+                onNurseStart={handleNurseStart}
+                onAdminStart={handleAdminStart}
+                onStockRevisionStart={handleStockRevisionStart}
+                unitName={selectedUnit || undefined}
+                onChangeUnit={handleChangeUnit}
+              />
+            )}
 
-          {view === 'SELECTOR' && (
-            <TechniqueSelector
-              techniques={techniques}
-              onSelectTechnique={handleSelectTechnique}
-              onBack={handleBackToLanding}
-            />
-          )}
+            {view === 'SELECTOR' && (
+              <TechniqueSelector
+                techniques={techniques}
+                onSelectTechnique={handleSelectTechnique}
+                onBack={handleBackToLanding}
+              />
+            )}
 
-          {view === 'DETAIL' && selectedTechnique && (
-            <TechniqueDetail
-              technique={selectedTechnique}
-              inventory={items}
-              locations={locations}
-              cartContents={cartContents}
-              onBack={handleBackToSelector}
-              onStartRestock={handleStartRestock}
-              unitId={selectedUnitId || undefined}
-            />
-          )}
+            {view === 'DETAIL' && selectedTechnique && (
+              <TechniqueDetail
+                technique={selectedTechnique}
+                inventory={items}
+                locations={locations}
+                cartContents={cartContents}
+                onBack={handleBackToSelector}
+                onStartRestock={handleStartRestock}
+                unitId={selectedUnitId || undefined}
+              />
+            )}
 
-          {view === 'RESTOCK' && selectedTechnique && (
-            <Restock
-              technique={selectedTechnique}
-              inventory={items}
-              locations={locations}
-              cartContents={cartContents}
-              onFinish={handleFinishRestock}
-              unitId={selectedUnitId || undefined}
-            />
-          )}
+            {view === 'RESTOCK' && selectedTechnique && (
+              <Restock
+                technique={selectedTechnique}
+                inventory={items}
+                locations={locations}
+                cartContents={cartContents}
+                onFinish={handleFinishRestock}
+                unitId={selectedUnitId || undefined}
+              />
+            )}
 
-          {view === 'STOCK_REVISION' && (
-            <StockRevision
-              locations={locations}
-              inventory={items}
-              cartContents={cartContents}
-              onRefresh={refreshCartContents}
-              onBack={handleBackToLanding}
-              unitId={selectedUnitId || undefined}
-            />
-          )}
+            {view === 'STOCK_REVISION' && (
+              <StockRevision
+                locations={locations}
+                inventory={items}
+                cartContents={cartContents}
+                onRefresh={refreshCartContents}
+                onBack={handleBackToLanding}
+                unitId={selectedUnitId || undefined}
+              />
+            )}
 
 
-          {view === 'ADMIN_LOGIN' && (
-            <AdminLogin
-              onLogin={signIn}
-              onSuccess={handleAdminLoginSuccess}
-              onBack={handleBackToLanding}
-            />
-          )}
+            {view === 'ADMIN_LOGIN' && (
+              <AdminLogin
+                onLogin={signIn}
+                onSuccess={handleAdminLoginSuccess}
+                onBack={handleBackToLanding}
+              />
+            )}
 
-          {view === 'ADMIN_DASHBOARD' && (
-            <>
-              {profileLoading ? (
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-clinical-600"></div>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">Verificando permisos...</p>
-                  </div>
-                </div>
-              ) : !profile || (profile.role !== 'SUPERVISOR' && profile.role !== 'ADMIN') ? (
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-                  <div className="max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center space-y-4">
-                    <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Acceso Denegado</h2>
-                      <p className="text-slate-500 dark:text-slate-400 mt-2">
-                        Esta cuenta no tiene permisos de supervisión.
-                      </p>
-                    </div>
-
-                    <div className="pt-4 space-y-3">
-                      <button
-                        onClick={() => { signOut(); setView('ADMIN_LOGIN'); }}
-                        className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-xl transition-colors"
-                      >
-                        Cerrar Sesión
-                      </button>
-                      <button
-                        onClick={handleBackToLanding}
-                        className="w-full py-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-                      >
-                        Volver al Inicio
-                      </button>
+            {view === 'ADMIN_DASHBOARD' && (
+              <>
+                {profileLoading ? (
+                  <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-clinical-600"></div>
+                      <p className="text-slate-500 dark:text-slate-400 font-medium">Verificando permisos...</p>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <AdminDashboard
-                  inventory={items}
-                  techniques={techniques}
-                  onLogout={() => {
-                    signOut();
-                    handleBackToLanding();
-                  }}
-                  onRefreshInventory={refreshItems}
-                  onRefreshTechniques={refreshTechniques}
-                  createItem={createItem}
-                  updateItem={updateItem}
-                  deleteItem={deleteItem}
-                  equipmentData={equipment}
-                  createEquipment={createEquipment}
-                  updateEquipment={updateEquipment}
-                  deleteEquipment={deleteEquipment}
-                  onRefreshEquipment={refreshEquipment}
-                  createTechnique={createTechnique}
-                  updateTechnique={updateTechnique}
-                  deleteTechnique={deleteTechnique}
-                  locationsData={locations}
-                  createLocation={createLocation}
-                  updateLocation={updateLocation}
-                  deleteLocation={deleteLocation}
-                  unitId={selectedUnitId || undefined}
-                />
-              )}
-            </>
-          )}
-        </>
+                ) : !profile || (profile.role !== 'SUPERVISOR' && profile.role !== 'ADMIN') ? (
+                  <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center space-y-4">
+                      <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Acceso Denegado</h2>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2">
+                          Esta cuenta no tiene permisos de supervisión.
+                        </p>
+                      </div>
+
+                      <div className="pt-4 space-y-3">
+                        <button
+                          onClick={() => { signOut(); setView('ADMIN_LOGIN'); }}
+                          className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-xl transition-colors"
+                        >
+                          Cerrar Sesión
+                        </button>
+                        <button
+                          onClick={handleBackToLanding}
+                          className="w-full py-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                        >
+                          Volver al Inicio
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <AdminDashboard
+                    inventory={items}
+                    techniques={techniques}
+                    onLogout={() => {
+                      signOut();
+                      handleBackToLanding();
+                    }}
+                    onRefreshInventory={refreshItems}
+                    onRefreshTechniques={refreshTechniques}
+                    createItem={createItem}
+                    updateItem={updateItem}
+                    deleteItem={deleteItem}
+                    equipmentData={equipment}
+                    createEquipment={createEquipment}
+                    updateEquipment={updateEquipment}
+                    deleteEquipment={deleteEquipment}
+                    onRefreshEquipment={refreshEquipment}
+                    createTechnique={createTechnique}
+                    updateTechnique={updateTechnique}
+                    deleteTechnique={deleteTechnique}
+                    locationsData={locations}
+                    createLocation={createLocation}
+                    updateLocation={updateLocation}
+                    deleteLocation={deleteLocation}
+                    unitId={selectedUnitId || undefined}
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

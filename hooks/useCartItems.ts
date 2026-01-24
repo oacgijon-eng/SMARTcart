@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { CartItem, LocationType } from '../types';
@@ -188,8 +187,7 @@ export function useGlobalCartItems(unitId?: string) {
                 .from('cart_contents')
                 .select(`
                     id, location_id, item_id, stock_ideal, next_expiry_date,
-                    items (id, name, category, image_url),
-                    locations(unit_id)
+                    items (id, name, category, image_url)
                 `);
 
             // Fetching all assignments for the prototype to ensure Warehouse items are included.
