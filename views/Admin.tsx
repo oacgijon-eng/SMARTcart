@@ -634,24 +634,32 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         return new Blob([byteArray], { type: contentType });
     };
 
-    const uploadImageToStorage = async (base64Data: string): Promise<string | null> => {
+    const uploadImageToStorage = async (data: string | File): Promise<string | null> => {
         try {
-            // STEP 1: Conversion
-            alert("Paso 1: Convirtiendo imagen...");
-            let blob;
-            try {
-                blob = base64ToBlob(base64Data, 'image/jpeg');
-                console.log("Blob created:", blob.size, blob.type);
-            } catch (e: any) {
-                alert(`Error convirtiendo imagen: ${e.message}`);
-                return null;
+            let blob: Blob;
+
+            // Step 1: Prepare Blob
+            if (data instanceof File) {
+                // Raw file (Zero-copy)
+                blob = data;
+                console.log("Using raw file for upload:", blob.size, blob.type);
+            } else {
+                // Base64 Legacy conversion
+                // alert("Paso 1: Convirtiendo imagen...");
+                try {
+                    blob = base64ToBlob(data, 'image/jpeg');
+                    console.log("Blob created from base64:", blob.size, blob.type);
+                } catch (e: any) {
+                    alert(`Error convirtiendo imagen: ${e.message}`);
+                    return null;
+                }
             }
 
             const fileName = `img_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
 
             // STEP 2: Upload
-            alert(`Paso 2: Subiendo ${Math.round(blob.size / 1024)}KB a Storage...`);
-            const { data, error } = await supabase.storage
+            // alert(`Paso 2: Subiendo ${Math.round(blob.size / 1024)}KB a Storage...`);
+            const { data: uploadData, error } = await supabase.storage
                 .from('images')
                 .upload(fileName, blob, {
                     contentType: 'image/jpeg',
@@ -714,20 +722,21 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
             setUploading(true);
             let finalImage = imagePreview;
 
-            // Upload to Storage if it's a new image (base64)
-            if (finalImage && finalImage.startsWith('data:')) {
-                console.log("Uploading equipment image to storage...");
+            // Upload to Storage
+            // Case A: New raw file
+            if (fileToUpload) {
+                const uploadedUrl = await uploadImageToStorage(fileToUpload);
+                if (uploadedUrl) finalImage = uploadedUrl;
+                else if (!confirm("Falló la subida. ¿Guardar sin imagen?")) {
+                    setUploading(false);
+                    return;
+                } else finalImage = '';
+            }
+            // Case B: Legacy Base64
+            else if (finalImage && finalImage.startsWith('data:')) {
                 const uploadedUrl = await uploadImageToStorage(finalImage);
-                if (uploadedUrl) {
-                    finalImage = uploadedUrl;
-                } else {
-                    console.warn("Upload failed, keeping base64");
-                    if (!confirm("La subida de la imagen falló. ¿Intentar guardar sin imagen?")) {
-                        setUploading(false);
-                        return; // Stop saving
-                    }
-                    finalImage = ''; // Clear it to avoid DB error
-                }
+                if (uploadedUrl) finalImage = uploadedUrl;
+                else finalImage = ''; // simplified fallback
             }
 
             console.log("Saving Equipment. Image length:", finalImage?.length);
@@ -784,6 +793,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
             });
 
             if (fileInputRef.current) fileInputRef.current.value = '';
+            setFileToUpload(null);
         } catch (e: any) {
             console.error('Error saving equipment:', e);
             alert('Error al guardar: ' + e.message);
@@ -1242,6 +1252,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         setSelectedParentLocation('');
         setSelectedSubLocation('');
         if (fileInputRef.current) fileInputRef.current.value = '';
+        setFileToUpload(null);
     };
 
     const handleEditItem = (item: Item) => {
@@ -1272,19 +1283,30 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
             setUploading(true);
             let finalImage = imagePreview;
 
-            // Upload to Storage if it's a new image (base64)
-            if (finalImage && finalImage.startsWith('data:')) {
-                console.log("Uploading material image to storage...");
+            // Upload to Storage
+            // Case A: New raw file selected (Priority 1)
+            if (fileToUpload) {
+                console.log("Uploading RAW file to storage...");
+                const uploadedUrl = await uploadImageToStorage(fileToUpload);
+                if (uploadedUrl) {
+                    finalImage = uploadedUrl;
+                } else {
+                    if (!confirm("Falló la subida de la imagen. ¿Guardar sin imagen?")) {
+                        setUploading(false);
+                        return;
+                    }
+                    finalImage = '';
+                }
+            }
+            // Case B: Legacy Base64 (Priority 2 - shouldn't happen with new flow but keeping for safety)
+            else if (finalImage && finalImage.startsWith('data:')) {
+                console.log("Uploading base64 image to storage...");
                 const uploadedUrl = await uploadImageToStorage(finalImage);
                 if (uploadedUrl) {
                     finalImage = uploadedUrl;
                 } else {
-                    console.warn("Upload failed, keeping base64");
-                    if (!confirm("La subida de la imagen falló. ¿Intentar guardar sin imagen?")) {
-                        setUploading(false);
-                        return; // Stop saving
-                    }
-                    finalImage = ''; // Clear it to avoid DB error
+                    // ... error handling
+                    finalImage = '';
                 }
             }
 
@@ -1401,57 +1423,36 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
+    const [fileToUpload, setFileToUpload] = useState<File | null>(null);
 
-    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         try {
-            // START: Image Processing
-
-            // Minimal synchronous check
             if (!e.target.files || e.target.files.length === 0) return;
 
-            // Capture reference only
-            const fileRef = e.target.files[0];
+            const file = e.target.files[0];
 
-            setTimeout(async () => {
-                try {
-                    // if (fileRef.size > 2 * 1024 * 1024) alert("Optimizando foto... un momento.");
+            if (file.size > 20 * 1024 * 1024) {
+                alert("Imagen demasiado grande (>20MB). Por favor usa otra.");
+                return;
+            }
 
-                    if (fileRef.size > 20 * 1024 * 1024) throw new Error("Imagen > 20MB. Usa menor resolución.");
+            // Revoke previous URL if exists to avoid leaks
+            if (imagePreview && imagePreview.startsWith('blob:')) {
+                URL.revokeObjectURL(imagePreview);
+            }
 
-                    // Resize
-                    const resized = await resizeImage(fileRef, 600, 600, 0.7);
+            // Zero-copy preview (Fast & Low Memory)
+            const objectUrl = URL.createObjectURL(file);
+            setImagePreview(objectUrl);
+            setFileToUpload(file);
 
-                    if (!resized) {
-                        alert("Error: El redimensionado devolvió vacio.");
-                    } else {
-                        setImagePreview(resized);
-                    }
+            // Reset input so validation triggers again if same file selected
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            if (cameraInputRef.current) cameraInputRef.current.value = '';
 
-                    // Cleanup
-                    // URL.revokeObjectURL(objectUrl); // No longer creating it here
-                } catch (err: any) {
-                    console.error("Error handling image:", err);
-
-                    // Fallback: If resize fails, try original if < 4MB
-                    if (fileRef.size < 4 * 1024 * 1024) {
-                        alert("Aviso: Falló la compresión. Usando imagen original...");
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                            setImagePreview(reader.result as string);
-                        };
-                        reader.readAsDataURL(fileRef);
-                    } else {
-                        alert(`Error: La imagen es muy grande (${Math.round(fileRef.size / 1024)}KB) y falló la compresión. Intenta tomar la foto con menor resolución.`);
-                    }
-                }
-
-                // Clear input
-                if (fileInputRef.current) fileInputRef.current.value = '';
-            }, 100);
-
-        } catch (globalErr: any) {
-            console.error("Critical error in handleImageChange:", globalErr);
-            alert(`Error SÍNCRONO inicial: ${globalErr?.message || globalErr}`);
+        } catch (err: any) {
+            console.error("Error setting image preview:", err);
+            alert("Error al preparar la imagen: " + err.message);
         }
     };
 
