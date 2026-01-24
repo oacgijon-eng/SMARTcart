@@ -519,14 +519,40 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
       </Modal>
 
       {/* PDF Protocol Modal */}
-      <Modal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} title="Protocolo de Técnica" maxWidth="max-w-7xl">
-        <div className="w-full h-[70vh] md:h-[80vh]">
+      <Modal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        title="Protocolo de Técnica"
+        maxWidth="max-w-7xl"
+        noPadding
+      >
+        <div className="w-full h-[70vh] md:h-[85vh] flex flex-col">
           {technique.protocolUrl ? (
-            <iframe
-              src={technique.protocolUrl}
-              className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white"
-              title="Protocolo PDF"
-            />
+            <>
+              <div className="flex-1 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden relative">
+                <object
+                  data={`${technique.protocolUrl}#view=FitH`}
+                  type="application/pdf"
+                  className="w-full h-full"
+                >
+                  <iframe
+                    src={technique.protocolUrl}
+                    className="w-full h-full border-none"
+                    title="Protocolo PDF Fallback"
+                  />
+                </object>
+              </div>
+              <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(technique.protocolUrl, '_blank')}
+                  className="gap-2"
+                >
+                  <FileText size={16} /> Abrir documento en pantalla completa
+                </Button>
+              </div>
+            </>
           ) : (
             <div className="flex items-center justify-center h-full text-slate-500 text-center p-8">
               <p>No hay documento de protocolo disponible asociada a esta técnica.</p>

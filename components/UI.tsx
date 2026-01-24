@@ -97,7 +97,14 @@ export const PageHeader: React.FC<{ title: string; subtitle?: string; onBack?: (
   );
 };
 
-export const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode; maxWidth?: string }> = ({ isOpen, onClose, title, children, maxWidth = 'max-w-md' }) => {
+export const Modal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  maxWidth?: string;
+  noPadding?: boolean;
+}> = ({ isOpen, onClose, title, children, maxWidth = 'max-w-md', noPadding = false }) => {
   if (!isOpen) return null;
 
   return (
@@ -111,7 +118,7 @@ export const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
           </button>
         </div>
-        <div className="p-6">
+        <div className={noPadding ? "" : "p-6"}>
           {children}
         </div>
       </div>
