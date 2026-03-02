@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2, X, ChevronRight, ChevronDown, Check, FileText, Search, Siren, Monitor, Package } from 'lucide-react';
 import { Button, Card } from '../../components/UI';
 import { Technique, Location, Item, Equipment } from '../../types';
+import { correctText } from '../../services/ai';
 
 interface TechniquesTabProps {
     techniques: Technique[];
@@ -74,7 +75,44 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
         setUploading(true);
         setSaveError(null);
         try {
-            const success = await handleSaveTechnique(newTechnique);
+            console.log("Saving Technique...", newTechnique.name);
+            let finalName = newTechnique.name?.trim() || '';
+            let finalDescription = newTechnique.description?.trim() || '';
+
+            if (finalName) {
+                try {
+                    const corrected = await correctText(finalName);
+                    if (corrected) {
+                        finalName = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    } else {
+                        finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                    }
+                } catch (e) {
+                    console.error("AI correction failed:", e);
+                    finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                }
+            }
+
+            if (finalDescription) {
+                try {
+                    const corrected = await correctText(finalDescription);
+                    if (corrected) {
+                        finalDescription = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    } else {
+                        finalDescription = finalDescription.charAt(0).toUpperCase() + finalDescription.slice(1);
+                    }
+                } catch (e) {
+                    finalDescription = finalDescription.charAt(0).toUpperCase() + finalDescription.slice(1);
+                }
+            }
+
+            const techToSave = {
+                ...newTechnique,
+                name: finalName,
+                description: finalDescription
+            };
+
+            const success = await handleSaveTechnique(techToSave);
             if (success !== false) {
                 setIsCreating(false);
             } else {
@@ -141,6 +179,18 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
             setNewTechnique({ ...newTechnique, cartIds: currentCarts.filter(id => id !== cartId) });
         } else {
             setNewTechnique({ ...newTechnique, cartIds: [...currentCarts, cartId] });
+        }
+    };
+
+    const handleBlurCorrectionText = async (fieldName: 'name' | 'description', value: string) => {
+        if (!value || !value.trim()) return;
+        try {
+            const corrected = await correctText(value);
+            if (corrected && corrected !== value) {
+                setNewTechnique(prev => ({ ...prev, [fieldName]: corrected }));
+            }
+        } catch (e) {
+            console.error(`Error correcting ${fieldName}:`, e);
         }
     };
 
@@ -297,8 +347,8 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
 
             {/* Technique Creator/Editor Modal */}
             {isCreating && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 overflow-y-auto" onClick={() => setIsCreating(false)}>
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full my-8 animate-in fade-in zoom-in-95 duration-200 border dark:border-slate-800" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-[60] p-4 overflow-y-auto" onClick={() => setIsCreating(false)}>
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full my-4 sm:my-8 animate-in fade-in zoom-in-95 duration-200 border dark:border-slate-800" onClick={e => e.stopPropagation()}>
                         <div className="p-6 space-y-6">
                             <div className="flex justify-between items-center">
                                 <h2 className="text-xl font-bold">{editingTechnique ? 'Editar Técnica' : 'Nueva Técnica'}</h2>
@@ -321,6 +371,7 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                                         className="w-full border rounded-lg px-4 py-2 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
                                         value={newTechnique.name}
                                         onChange={e => setNewTechnique({ ...newTechnique, name: e.target.value })}
+                                        onBlur={e => handleBlurCorrectionText('name', e.target.value)}
                                     />
                                 </div>
                                 <div>
@@ -329,6 +380,7 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                                         className="w-full border rounded-lg px-4 py-2 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 h-24"
                                         value={newTechnique.description}
                                         onChange={e => setNewTechnique({ ...newTechnique, description: e.target.value })}
+                                        onBlur={e => handleBlurCorrectionText('description', e.target.value)}
                                     />
                                 </div>
 

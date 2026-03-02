@@ -4,6 +4,7 @@ import { Package, Search, LayoutGrid, List, Plus, Edit, Trash2, MapPin, Clipboar
 import { Button } from '../../components/UI';
 import { Item, Location } from '../../types';
 import { useDebounce } from '../../hooks/useDebounce';
+import { correctText } from '../../services/ai';
 
 interface InventoryTabProps {
     inventory: Item[];
@@ -415,8 +416,8 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
             {/* Material Creator/Editor Modal */}
             {isCreating && createPortal(
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-[60] p-4 overflow-y-auto" onClick={() => setIsCreating(false)}>
-                    <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full my-8 animate-in fade-in zoom-in-95 duration-200 border border-white/20 dark:border-slate-700/50" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-start justify-center z-[60] p-4 overflow-y-auto" onClick={() => setIsCreating(false)}>
+                    <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full my-4 sm:my-8 animate-in fade-in zoom-in-95 duration-200 border border-white/20 dark:border-slate-700/50 h-fit" onClick={e => e.stopPropagation()}>
                         <div className="p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">{editingItem ? 'Editar Material' : 'Añadir Nuevo Material'}</h2>
@@ -541,7 +542,22 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                                 <Button fullWidth onClick={async () => {
                                     setUploading(true);
                                     try {
-                                        const success = await onSaveItem(newItem, selectedSubLocation || selectedParentLocation);
+                                        // DOBLE VALIDACIÓN: IA antes de guardar
+                                        let finalName = newItem.name?.trim() || '';
+
+                                        if (finalName) {
+                                            try {
+                                                const corrected = await correctText(finalName);
+                                                if (corrected) finalName = corrected;
+                                            } catch (e) { console.error("IA name fail:", e); }
+                                        }
+
+                                        const itemToSave = {
+                                            ...newItem,
+                                            name: finalName
+                                        };
+
+                                        const success = await onSaveItem(itemToSave, selectedSubLocation || selectedParentLocation);
                                         if (success !== false) {
                                             setIsCreating(false);
                                             setEditingItem(null);

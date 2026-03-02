@@ -337,11 +337,57 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
     const handleAddTechnique = async (techData: any) => {
         try {
-            if (techData.id) {
-                await updateTechnique(techData.id, techData);
-            } else {
-                await createTechnique(techData);
+            console.log("Saving Technique. AI correction triggered...", techData.name);
+            let finalName = techData.name?.trim() || '';
+            let finalDescription = techData.description?.trim() || '';
+
+            // Force initial capitalization manually as safety
+            if (finalName) finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+            if (finalDescription) finalDescription = finalDescription.charAt(0).toUpperCase() + finalDescription.slice(1);
+
+            // AI Correction
+            if (finalName) {
+                try {
+                    const corrected = await correctText(finalName);
+                    if (corrected) {
+                        finalName = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    } else {
+                        finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                    }
+                } catch (e) {
+                    console.error("Text correction failed for name", e);
+                    finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                }
             }
+
+            if (finalDescription) {
+                try {
+                    const corrected = await correctText(finalDescription);
+                    if (corrected) {
+                        finalDescription = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    } else {
+                        finalDescription = finalDescription.charAt(0).toUpperCase() + finalDescription.slice(1);
+                    }
+                } catch (e) {
+                    console.error("Text correction failed for description", e);
+                    finalDescription = finalDescription.charAt(0).toUpperCase() + finalDescription.slice(1);
+                }
+            }
+
+            console.log("Final name to save:", finalName);
+
+            const dataToSave = {
+                ...techData,
+                name: finalName,
+                description: finalDescription
+            };
+
+            if (dataToSave.id) {
+                await updateTechnique(dataToSave.id, dataToSave);
+            } else {
+                await createTechnique(dataToSave);
+            }
+
             if (onRefreshTechniques) onRefreshTechniques();
             return true;
         } catch (e: any) {
@@ -450,9 +496,14 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
                 try {
                     const corrected = await correctText(finalName);
-                    if (corrected) finalName = corrected;
+                    if (corrected) {
+                        finalName = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    } else {
+                        finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                    }
                 } catch (e) {
                     console.error("Text correction failed", e);
+                    finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
                 }
             }
 
@@ -514,10 +565,26 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                 if (uploadedUrl) finalImage = uploadedUrl;
             }
 
+            let finalName = equipmentData.name.trim();
+            if (finalName.length > 0) {
+                finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                try {
+                    const corrected = await correctText(finalName);
+                    if (corrected) {
+                        finalName = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+                    } else {
+                        finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                    }
+                } catch (e) {
+                    console.error("Text correction failed", e);
+                    finalName = finalName.charAt(0).toUpperCase() + finalName.slice(1);
+                }
+            }
+
             if (equipmentData.id) {
-                await updateEquipment(equipmentData.id, { ...equipmentData, imageUrl: finalImage });
+                await updateEquipment(equipmentData.id, { ...equipmentData, name: finalName, imageUrl: finalImage });
             } else {
-                await createEquipment({ ...equipmentData, imageUrl: finalImage });
+                await createEquipment({ ...equipmentData, name: finalName, imageUrl: finalImage });
             }
             if (onRefreshEquipment) onRefreshEquipment();
         } catch (e: any) {

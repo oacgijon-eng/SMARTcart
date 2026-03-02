@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Monitor, Edit, Trash2, Zap, MapPin, X, Camera, Upload } from 'lucide-react';
 import { Button, Card } from '../../components/UI';
 import { Equipment, Location } from '../../types';
+import { correctText } from '../../services/ai';
 
 interface EquipmentTabProps {
     equipment: Equipment[];
@@ -66,7 +67,31 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({
     const handleLocalSave = async () => {
         setUploading(true);
         try {
-            await handleSaveEquipment(newEquipment, imagePreview);
+            // DOBLE VALIDACIÓN: IA antes de guardar
+            let finalName = newEquipment.name?.trim() || '';
+            let finalDescription = newEquipment.description?.trim() || '';
+
+            if (finalName) {
+                try {
+                    const corrected = await correctText(finalName);
+                    if (corrected) finalName = corrected;
+                } catch (e) { console.error("IA name fail:", e); }
+            }
+
+            if (finalDescription) {
+                try {
+                    const corrected = await correctText(finalDescription);
+                    if (corrected) finalDescription = corrected;
+                } catch (e) { console.error("IA desc fail:", e); }
+            }
+
+            const eqToSave = {
+                ...newEquipment,
+                name: finalName,
+                description: finalDescription
+            };
+
+            await handleSaveEquipment(eqToSave, imagePreview);
             setIsCreating(false);
         } catch (err) {
             console.error(err);
@@ -81,6 +106,18 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({
             const reader = new FileReader();
             reader.onloadend = () => setImagePreview(reader.result as string);
             reader.readAsDataURL(file);
+        }
+    };
+
+    const handleBlurCorrectionText = async (fieldName: 'name' | 'description', value: string) => {
+        if (!value || !value.trim()) return;
+        try {
+            const corrected = await correctText(value);
+            if (corrected && corrected !== value) {
+                setNewEquipment(prev => ({ ...prev, [fieldName]: corrected }));
+            }
+        } catch (e) {
+            console.error(`Error correcting ${fieldName}:`, e);
         }
     };
 
@@ -153,8 +190,8 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({
 
             {/* Creator/Editor Modal */}
             {isCreating && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-6 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto border dark:border-slate-800">
+                <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-6 animate-in fade-in zoom-in-95 duration-200 mt-4 sm:mt-10 border dark:border-slate-800 h-fit max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-start">
                             <div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -177,6 +214,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({
                                         placeholder="Ej: Monitor Philips"
                                         value={newEquipment.name}
                                         onChange={e => setNewEquipment({ ...newEquipment, name: e.target.value })}
+                                        onBlur={e => handleBlurCorrectionText('name', e.target.value)}
                                     />
                                 </div>
 
@@ -217,6 +255,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({
                                         placeholder="Detalles adicionales..."
                                         value={newEquipment.description}
                                         onChange={e => setNewEquipment({ ...newEquipment, description: e.target.value })}
+                                        onBlur={e => handleBlurCorrectionText('description', e.target.value)}
                                     />
                                 </div>
                             </div>

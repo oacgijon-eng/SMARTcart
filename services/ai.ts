@@ -9,14 +9,15 @@ export async function correctText(text: string): Promise<string> {
 
     if (!OR_KEY) {
         console.warn("Falta VITE_OPENROUTER_API_KEY para corrección de texto");
-        // Fallback or alert logic could go here, but usually silently returning original is safer for UI
-        return text;
+        return text.charAt(0).toUpperCase() + text.slice(1);
     }
     if (!text || !text.trim()) return text;
 
-    // Using a fast, cost-effective model on OpenRouter
     const MODEL = "google/gemini-2.0-flash-001";
     const URL = "https://openrouter.ai/api/v1/chat/completions";
+
+    // Diagnostic log (SAFE: only first 4 chars)
+    // console.log(`AI Text Correction triggered for "${text.slice(0, 15)}...". Key: ${OR_KEY ? OR_KEY.slice(0, 7) : 'MISSING'}`);
 
     // 10 Second Timeout
     const controller = new AbortController();
@@ -36,11 +37,11 @@ export async function correctText(text: string): Promise<string> {
                 messages: [
                     {
                         role: "system",
-                        content: `Eres un asistente experto en suministros médicos. Tu misión es CORREGIR errores ortográficos y gramaticales.
-Instrucciones:
-1. Corrige typos y errores de escritura (ej: "guantees" -> "Guantes", "jeringuills" -> "Jeringuillas").
-2. Añade todas las tildes necesarias (ej: "esteril" -> "Estéril", "via" -> "Vía").
-3. Capitaliza la primera letra de cada palabra importante si es apropiado.
+                        content: `Eres un asistente experto en suministros y técnicas médicas en ESPAÑOL. Tu misión es corregir ortografía y gramática. 
+REGLAS:
+1. SIEMPRE capitaliza la primera letra (ej: "ecografia" -> "Ecografía").
+2. Corrige errores de escritura (ej: "ecografiaaa" -> "Ecografía").
+3. Añade tildes (ej: "basico" -> "Básico").
 4. Devuelve SOLO el texto corregido, sin comillas ni explicaciones.`
                     },
                     {
@@ -48,7 +49,7 @@ Instrucciones:
                         content: text
                     }
                 ],
-                temperature: 0.3,
+                temperature: 0.1,
                 max_tokens: 500,
             }),
             signal: controller.signal
@@ -58,9 +59,7 @@ Instrucciones:
 
         if (!response.ok) {
             console.warn("OpenRouter API Error:", response.status);
-            const errText = await response.text();
-            console.warn("Error details:", errText);
-            return text;
+            return text.charAt(0).toUpperCase() + text.slice(1);
         }
 
         const data = await response.json();
@@ -68,21 +67,16 @@ Instrucciones:
 
         if (data.choices && data.choices[0]?.message?.content) {
             let corrected = data.choices[0].message.content.trim();
-            // Remove any quotes if AI adds them
             corrected = corrected.replace(/^["']|["']$/g, '');
-            // Ensure no markdown code blocks
             corrected = corrected.replace(/```/g, '');
-            return corrected;
+            if (!corrected) return text.charAt(0).toUpperCase() + text.slice(1);
+            return corrected.charAt(0).toUpperCase() + corrected.slice(1);
         }
 
-        return text;
+        return text.charAt(0).toUpperCase() + text.slice(1);
     } catch (error: any) {
-        if (error.name === 'AbortError') {
-            console.warn("AI Correction Timed Out (10s). Saving original text.");
-        } else {
-            console.error("Error correcting text:", error);
-        }
-        return text;
+        console.error("Error correcting text:", error);
+        return text.charAt(0).toUpperCase() + text.slice(1);
     } finally {
         clearTimeout(timeoutId);
     }
