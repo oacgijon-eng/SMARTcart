@@ -1,0 +1,47 @@
+
+Plan to refactor Admin.tsx:
+1. Remove `const techniquesCart = ...`, `const curesCart = ...`, `const crashCart = ...`.
+2. Remove `refreshCarts`.
+3. Instead of specific hooks, use a single dynamic hook for the *selected* cart:
+   `const selectedCartItems = useCartItems(selectedCartId || '');`
+   (Note: This might mean we only load data for the ACTIVE cart, which is efficient).
+4. BUT, we also use these carts for "Available in Carts" badges in the Item Detail view (lines 1417).
+   `const allCartItems = [...techniquesCart.cartItems, ...curesCart.cartItems, ...crashCart.cartItems];`
+   This is trickier. If we want to show availability across ALL carts, we need to fetch ALL cart items.
+   `useCartItems` logic now fetches by `cartType` (ID).
+   If we want "Global Search" or "Available In", we might need a new hook `useAllCartItems()` that fetches `cart_contents` entirely.
+   
+   For now, to reproduce the "Available in Carts" feature correctly without loading 50 hooks:
+   The `cart_contents` table has all data.
+   I can create a `useAllGlobalItems` hook that just does `select * from cart_contents`.
+   
+   Actually, `useCartItems` refactor I did:
+   It takes `cartType` (which is a parent_id).
+   
+   If I want to simplify `Admin.tsx`:
+   - Remove the separate hooks.
+   - For the "Available in Carts" feature, maybe I should fetch all `cart_contents` once.
+   
+5. Sidebar: Remove hardcoded Cures/Crash buttons.
+6. Main Content:
+   - When `activeTab === 'CART'` (or whatever we use for dynamic carts), render `<CartView cartId={selectedCartId} ... />`.
+   - The current `activeTab` has 'CURES', 'CRASH', 'DYNAMIC_CART'. I should consolidate to just 'CART' or use 'DYNAMIC_CART' for everything.
+
+Refactoring Steps:
+1. Modify `Admin.tsx` to use a generic `activeTab === 'CART'` state for ANY cart interaction.
+2. `selectedCartId` will hold the ID of the cart (whether it's Curas, Paradas, or new).
+3. Sidebar: Loop through `savedLocations.filter(l => l.type === 'CART' && !l.parent_id)` and render a button that sets `activeTab = 'CART'` and `selectedCartId = l.id`.
+4. Remove the hardcoded filtering.
+5. Create a `const activeCartItems = useCartItems(selectedCartId || '')` at the top level?
+   Or better, let `CartView` handle the fetching?
+   Currently `CartView` accepts `items`, `onAdd`, `onRemove`, etc. It is a controlled component.
+   So `Admin.tsx` must fetch.
+   
+   `const activeCartItems = useCartItems(selectedCartId || '');`
+   
+   This works for the active view.
+   
+   For the "Available in Carts" (badges) feature:
+   I should probably create a new hook `useGlobalCartAvailability()` that returns a map of ItemID -> CartIDs.
+   
+   Let's check `CartView` usage first.
