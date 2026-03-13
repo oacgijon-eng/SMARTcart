@@ -555,11 +555,11 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
         }
     };
 
-    const handleSaveEquipment = async (equipmentData: any) => {
+    const handleSaveEquipment = async (equipmentData: any, imagePreview?: string | null) => {
         if (!equipmentData.name) return;
         try {
             setUploading(true);
-            let finalImage = equipmentData.imageUrl;
+            let finalImage = imagePreview || equipmentData.imageUrl;
             if (finalImage && finalImage.startsWith('data:')) {
                 const uploadedUrl = await uploadImageToStorage(finalImage);
                 if (uploadedUrl) finalImage = uploadedUrl;
