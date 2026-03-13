@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PageHeader, Card, Badge } from '../components/UI';
 import { Technique } from '../types';
-import { Search, ChevronRight, Activity, Droplet, HeartPulse, Stethoscope } from 'lucide-react';
+import { Search, ChevronRight } from 'lucide-react';
 
 interface TechniqueSelectorProps {
   techniques: Technique[];
@@ -15,17 +15,9 @@ export const TechniqueSelector: React.FC<TechniqueSelectorProps> = ({ techniques
   const filtered = techniques.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.category.toLowerCase().includes(search.toLowerCase())
-  );
+  ).sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
 
-  // Helper to render icon based on name
-  const renderIcon = (name: string) => {
-    switch (name) {
-      case 'Activity': return <Activity className="text-clinical-600 dark:text-clinical-400" size={32} />;
-      case 'Droplet': return <Droplet className="text-blue-500 dark:text-blue-400" size={32} />;
-      case 'HeartPulse': return <HeartPulse className="text-red-500 dark:text-red-400" size={32} />;
-      default: return <Stethoscope className="text-slate-500 dark:text-slate-400" size={32} />;
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-6">
@@ -60,10 +52,6 @@ export const TechniqueSelector: React.FC<TechniqueSelectorProps> = ({ techniques
               onClick={() => onSelectTechnique(technique)}
               className="flex items-center gap-4 p-4 hover:shadow-md transition-shadow cursor-pointer border border-slate-200 dark:border-slate-700"
             >
-              <div className="h-16 w-16 bg-slate-50 dark:bg-slate-700 rounded-2xl flex items-center justify-center shrink-0">
-                {renderIcon(technique.iconName)}
-
-              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">{technique.name}</h3>
