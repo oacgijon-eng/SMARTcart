@@ -3,7 +3,7 @@ import { PageHeader, Button, Card } from '../components/UI';
 import { CartView } from '../components/CartView';
 import { CartSpaceManagerModal } from '../components/CartSpaceManagerModal';
 import { Item, Technique, Equipment } from '../types';
-import { Package, FilePlus, Settings, LogOut, Plus, Camera, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, ChevronLeft, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Package, FilePlus, Settings, LogOut, Plus, Camera, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, ChevronLeft, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck, RefreshCw, AlertTriangle, AlertCircle } from 'lucide-react';
 
 import { supabase } from '../services/supabase';
 import { Location } from '../hooks/useLocations';
@@ -1066,6 +1066,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                                                     location_id: curr.location_id,
                                                     location_name: curr.locations.name,
                                                     location_color: curr.locations.color,
+                                                    reviewer: curr.reviewer_name,
                                                     date: curr.created_at
                                                 });
                                             }
@@ -1076,33 +1077,80 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                                         return (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
-                                                {latestRevisions.map((item: any) => (
-                                                    <div
-                                                        key={item.location_id}
-                                                        className="bg-white dark:bg-slate-800 p-3 rounded-lg border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex items-center"
-                                                        style={{ borderColor: item.location_color || '#e2e8f0' }}
-                                                    >
-                                                        {/* Color accent bar */}
-                                                        <div
-                                                            className="absolute top-0 left-0 w-1.5 h-full"
-                                                            style={{ backgroundColor: item.location_color || '#e2e8f0' }}
-                                                        />
+                                                {latestRevisions.map((item: any) => {
+                                                    const getRecursiveChildIds = (parentId: string): string[] => {
+                                                        const children = savedLocations.filter(l => l.parent_id === parentId);
+                                                        let ids = children.map(c => c.id);
+                                                        children.forEach(c => {
+                                                            ids = [...ids, ...getRecursiveChildIds(c.id)];
+                                                        });
+                                                        return ids;
+                                                    };
 
-                                                        <div className="pl-3">
-                                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 truncate" title={item.location_name}>
-                                                                {item.location_name}
-                                                            </div>
-                                                            <div className="flex items-baseline gap-2">
-                                                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                                                    {new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                                                                </span>
-                                                                <span className="text-[10px] text-slate-400">
-                                                                    {new Date(item.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                                                                </span>
+                                                    const locationIds = [item.location_id, ...getRecursiveChildIds(item.location_id)];
+                                                    const cartItems = globalCartItems.allItems.filter(i => locationIds.includes(i.locationId));
+
+                                                    const today = new Date();
+                                                    today.setHours(0, 0, 0, 0);
+                                                    const soonLimit = new Date();
+                                                    soonLimit.setDate(today.getDate() + 30);
+
+                                                    const hasExpired = cartItems.some(i => i.nextExpiryDate && new Date(i.nextExpiryDate) < today);
+                                                    const hasSoonToExpire = !hasExpired && cartItems.some(i => {
+                                                        if (!i.nextExpiryDate) return false;
+                                                        const exp = new Date(i.nextExpiryDate);
+                                                        return exp >= today && exp <= soonLimit;
+                                                    });
+
+                                                    return (
+                                                        <div
+                                                            key={item.location_id}
+                                                            className="bg-white dark:bg-slate-800 p-3 rounded-lg border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex items-center"
+                                                            style={{ borderColor: item.location_color || '#e2e8f0' }}
+                                                        >
+                                                            {/* Color accent bar */}
+                                                            <div
+                                                                className="absolute top-0 left-0 w-1.5 h-full"
+                                                                style={{ backgroundColor: item.location_color || '#e2e8f0' }}
+                                                            />
+
+                                                            <div className="pl-3 flex-1">
+                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 truncate" title={item.location_name}>
+                                                                    {item.location_name}
+                                                                </div>
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <div className="flex items-baseline gap-2">
+                                                                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                                                            {new Date(item.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-slate-400">
+                                                                            {new Date(item.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex gap-1.5">
+                                                                        {hasExpired && (
+                                                                            <div className="flex items-center gap-1 text-red-500 animate-pulse" title="Material caducado">
+                                                                                <AlertCircle size={14} />
+                                                                                <span className="text-[10px] font-bold hidden lg:inline">CADUCADO</span>
+                                                                            </div>
+                                                                        )}
+                                                                        {hasSoonToExpire && (
+                                                                            <div className="flex items-center gap-1 text-amber-500" title="Material próximo a caducar (<30 días)">
+                                                                                <AlertTriangle size={14} />
+                                                                                <span className="text-[10px] font-bold hidden lg:inline">AVISO</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                                                                    <Users size={10} className="shrink-0" />
+                                                                    <span className="truncate italic">{item.reviewer || 'Anónimo'}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         );
                                     })()}
