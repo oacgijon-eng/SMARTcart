@@ -39,8 +39,10 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
         imageUrl: '',
         protocolUrl: ''
     });
-    const [isMaterialModalOpen, setIsMaterialModalOpen] = React.useState(false);
-    const [isEquipmentModalOpen, setIsEquipmentModalOpen] = React.useState(false);
+    const [isMaterialModalOpen, setIsMaterialModalOpen] = React.useState(false); 
+    const [isEquipmentModalOpen, setIsEquipmentModalOpen] = React.useState(false); 
+    const [isMaterialSearchFocused, setIsMaterialSearchFocused] = React.useState(false);
+    const [isEquipmentSearchFocused, setIsEquipmentSearchFocused] = React.useState(false);
     const [materialSearch, setMaterialSearch] = React.useState('');
     const [equipmentSearch, setEquipmentSearch] = React.useState('');
     const [uploading, setUploading] = React.useState(false);
@@ -363,21 +365,21 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                                 </div>
                             )}
 
-                            <div className="space-y-4">
+                            <div className="space-y-4 text-left">
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Nombre de la Técnica</label>
+                                    <label className="block text-sm font-medium mb-1 dark:text-slate-300">Nombre de la Técnica</label>
                                     <input
                                         type="text"
-                                        className="w-full border rounded-lg px-4 py-2 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                                        className="w-full border rounded-lg px-4 py-2 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 dark:text-white"
                                         value={newTechnique.name}
                                         onChange={e => setNewTechnique({ ...newTechnique, name: e.target.value })}
                                         onBlur={e => handleBlurCorrectionText('name', e.target.value)}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Descripción</label>
+                                    <label className="block text-sm font-medium mb-1 dark:text-slate-300">Descripción</label>
                                     <textarea
-                                        className="w-full border rounded-lg px-4 py-2 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 h-24"
+                                        className="w-full border rounded-lg px-4 py-2 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 dark:text-white h-24"
                                         value={newTechnique.description}
                                         onChange={e => setNewTechnique({ ...newTechnique, description: e.target.value })}
                                         onBlur={e => handleBlurCorrectionText('description', e.target.value)}
@@ -385,7 +387,7 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-medium">Carros Necesarios</label>
+                                    <label className="block text-sm font-medium dark:text-slate-300">Carros Necesarios</label>
                                     <div className="space-y-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 max-h-64 overflow-y-auto">
                                         {savedLocations.filter(loc => loc.type === 'CART' && !loc.parent_id).map(cart => {
                                             const isSelected = newTechnique.cartIds?.includes(cart.id);
@@ -415,18 +417,61 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                                 </div>
 
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <label className="block text-sm font-medium">Aparataje ({newTechnique.equipment?.length || 0})</label>
-                                        <Button size="sm" variant="outline" onClick={() => setIsEquipmentModalOpen(true)}>
-                                            <Plus size={14} /> Gestionar Aparataje
-                                        </Button>
+                                    <label className="block text-sm font-medium dark:text-slate-300">Aparataje ({newTechnique.equipment?.length || 0})</label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input
+                                            type="text"
+                                            className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none dark:text-white"
+                                            placeholder="Buscar aparataje para añadir..."
+                                            value={equipmentSearch}
+                                            onFocus={() => setIsEquipmentSearchFocused(true)}
+                                            onChange={e => setEquipmentSearch(e.target.value)}
+                                        />
+                                        {equipmentSearch.length > 0 && isEquipmentSearchFocused && (
+                                            <>
+                                                <div className="fixed inset-0 z-[40]" onClick={() => setIsEquipmentSearchFocused(false)}></div>
+                                                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                                                    {equipment
+                                                        .filter(eq => eq.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
+                                                        .map(eq => {
+                                                            const isSelected = (newTechnique.equipment || []).some(e => e.equipmentId === eq.id);
+                                                            return (
+                                                                <button
+                                                                    key={eq.id}
+                                                                    className={`w-full flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-800 text-left border-b border-slate-100 dark:border-slate-800 last:border-0 ${isSelected ? 'opacity-50' : ''}`}
+                                                                    onClick={() => {
+                                                                        if (!isSelected) {
+                                                                            toggleEquipment(eq.id);
+                                                                        }
+                                                                        setEquipmentSearch('');
+                                                                    }}
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        {eq.imageUrl ? (
+                                                                            <img src={eq.imageUrl} alt="" className="w-8 h-8 rounded object-cover" />
+                                                                        ) : (
+                                                                            <Monitor size={16} className="text-slate-400" />
+                                                                        )}
+                                                                        <span className="text-sm dark:text-slate-200">{eq.name}</span>
+                                                                    </div>
+                                                                    {isSelected ? <Check size={16} className="text-indigo-600" /> : <Plus size={16} className="text-slate-400" />}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    {equipment.filter(eq => eq.name.toLowerCase().includes(equipmentSearch.toLowerCase())).length === 0 && (
+                                                        <div className="p-4 text-center text-sm text-slate-500">No se encontraron equipos</div>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                     <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                                         {newTechnique.equipment?.map((eq, idx) => (
                                             <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
                                                 <div className="flex items-center gap-3">
                                                     <span className="font-bold text-indigo-600">{eq.quantity}x</span>
-                                                    <span className="text-sm">{eq.equipment?.name || 'Equipo'}</span>
+                                                    <span className="text-sm dark:text-slate-300">{eq.equipment?.name || 'Equipo'}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
                                                     <Button size="sm" variant="ghost" onClick={() => updateEquipmentQuantity(eq.equipmentId, Math.max(1, eq.quantity - 1))}>-</Button>
@@ -441,18 +486,61 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                                 </div>
 
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <label className="block text-sm font-medium">Materiales ({newTechnique.items?.length || 0})</label>
-                                        <Button size="sm" variant="outline" onClick={() => setIsMaterialModalOpen(true)}>
-                                            <Plus size={14} /> Gestionar Materiales
-                                        </Button>
+                                    <label className="block text-sm font-medium dark:text-slate-300">Materiales ({newTechnique.items?.length || 0})</label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input
+                                            type="text"
+                                            className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-clinical-500 outline-none dark:text-white"
+                                            placeholder="Buscar material para añadir..."
+                                            value={materialSearch}
+                                            onFocus={() => setIsMaterialSearchFocused(true)}
+                                            onChange={e => setMaterialSearch(e.target.value)}
+                                        />
+                                        {materialSearch.length > 0 && isMaterialSearchFocused && (
+                                            <>
+                                                <div className="fixed inset-0 z-[40]" onClick={() => setIsMaterialSearchFocused(false)}></div>
+                                                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                                                    {inventory
+                                                        .filter(item => item.name.toLowerCase().includes(materialSearch.toLowerCase()))
+                                                        .map(item => {
+                                                            const isSelected = (newTechnique.items || []).some(m => m.itemId === item.id);
+                                                            return (
+                                                                <button
+                                                                    key={item.id}
+                                                                    className={`w-full flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-800 text-left border-b border-slate-100 dark:border-slate-800 last:border-0 ${isSelected ? 'opacity-50' : ''}`}
+                                                                    onClick={() => {
+                                                                        if (!isSelected) {
+                                                                            toggleItem(item.id, item.name);
+                                                                        }
+                                                                        setMaterialSearch('');
+                                                                    }}
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        {item.imageUrl ? (
+                                                                            <img src={item.imageUrl} alt="" className="w-8 h-8 rounded object-cover" />
+                                                                        ) : (
+                                                                            <Package size={16} className="text-slate-400" />
+                                                                        )}
+                                                                        <span className="text-sm dark:text-slate-200">{item.name}</span>
+                                                                    </div>
+                                                                    {isSelected ? <Check size={16} className="text-clinical-600" /> : <Plus size={16} className="text-slate-400" />}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    {inventory.filter(item => item.name.toLowerCase().includes(materialSearch.toLowerCase())).length === 0 && (
+                                                        <div className="p-4 text-center text-sm text-slate-500">No se encontraron materiales</div>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                     <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                                         {newTechnique.items?.map((m, idx) => (
                                             <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
                                                 <div className="flex items-center gap-3">
                                                     <span className="font-bold text-clinical-600">{m.quantity}x</span>
-                                                    <span className="text-sm">{m.item?.name || 'Material'}</span>
+                                                    <span className="text-sm dark:text-slate-300">{m.item?.name || 'Material'}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
                                                     <Button size="sm" variant="ghost" onClick={() => updateItemQuantity(m.itemId, Math.max(1, m.quantity - 1))}>-</Button>
@@ -467,7 +555,7 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t flex gap-3">
+                            <div className="pt-4 border-t dark:border-slate-800 flex gap-3">
                                 <Button fullWidth variant="ghost" onClick={() => setIsCreating(false)}>Cancelar</Button>
                                 <Button fullWidth onClick={handleLocalSave} disabled={uploading}>
                                     {uploading ? 'Guardando...' : 'Guardar Técnica'}
@@ -478,87 +566,6 @@ export const TechniquesTab: React.FC<TechniquesTabProps> = ({
                 </div>
             )}
 
-            {/* Material Selection Modal */}
-            {isMaterialModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in slide-in-from-bottom-4 flex flex-col max-h-[80vh]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold">Seleccionar Materiales</h3>
-                            <button onClick={() => setIsMaterialModalOpen(false)}><X size={20} /></button>
-                        </div>
-                        <div className="relative mb-4">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
-                                placeholder="Buscar material..."
-                                value={materialSearch}
-                                onChange={e => setMaterialSearch(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex-1 overflow-y-auto space-y-1">
-                            {inventory
-                                .filter(item => item.name.toLowerCase().includes(materialSearch.toLowerCase()))
-                                .map(item => {
-                                    const isSelected = newTechnique.items?.some(m => m.itemId === item.id);
-                                    return (
-                                        <button
-                                            key={item.id}
-                                            className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${isSelected ? 'bg-clinical-50 dark:bg-clinical-900/30 text-clinical-700 dark:text-clinical-400' : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-                                                }`}
-                                            onClick={() => toggleItem(item.id, item.name)}
-                                        >
-                                            <span className="text-sm">{item.name}</span>
-                                            {isSelected && <Check size={16} />}
-                                        </button>
-                                    );
-                                })}
-                        </div>
-                        <Button className="mt-6" fullWidth onClick={() => setIsMaterialModalOpen(false)}>Listo</Button>
-                    </div>
-                </div>
-            )}
-
-            {/* Equipment Selection Modal */}
-            {isEquipmentModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in slide-in-from-bottom-4 flex flex-col max-h-[80vh]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold">Seleccionar Aparataje</h3>
-                            <button onClick={() => setIsEquipmentModalOpen(false)}><X size={20} /></button>
-                        </div>
-                        <div className="relative mb-4">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700"
-                                placeholder="Buscar equipo..."
-                                value={equipmentSearch}
-                                onChange={e => setEquipmentSearch(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex-1 overflow-y-auto space-y-1">
-                            {equipment
-                                .filter(eq => eq.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
-                                .map(eq => {
-                                    const isSelected = newTechnique.equipment?.some(e => e.equipmentId === eq.id);
-                                    return (
-                                        <button
-                                            key={eq.id}
-                                            className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-                                                }`}
-                                            onClick={() => toggleEquipment(eq.id)}
-                                        >
-                                            <span className="text-sm">{eq.name}</span>
-                                            {isSelected && <Check size={16} />}
-                                        </button>
-                                    );
-                                })}
-                        </div>
-                        <Button className="mt-6" fullWidth onClick={() => setIsEquipmentModalOpen(false)}>Listo</Button>
-                    </div>
-                </div>
-            )}
 
             {/* Protocol Viewer Modal */}
             {protocolViewer.isOpen && (
