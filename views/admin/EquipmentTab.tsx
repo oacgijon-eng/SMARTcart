@@ -104,7 +104,11 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = ({
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => setImagePreview(reader.result as string);
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                setImagePreview(result);
+                setNewEquipment(prev => ({ ...prev, imageUrl: result }));
+            };
             reader.readAsDataURL(file);
         }
     };
