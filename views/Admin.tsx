@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { PageHeader, Button, Card } from '../components/UI';
 import { CartView } from '../components/CartView';
+import { CartSpaceManagerModal } from '../components/CartSpaceManagerModal';
 import { Item, Technique, Equipment } from '../types';
 import { Package, FilePlus, Settings, LogOut, Plus, Camera, ArrowLeft, Upload, X, Edit, Trash2, MapPin, LayoutGrid, List, FileText, ShoppingCart, BriefcaseMedical, Siren, Zap, ChevronDown, ChevronRight, ChevronLeft, Check, Monitor, ClipboardList, Clock, Building2, Users, Menu, Search, ShieldCheck, RefreshCw } from 'lucide-react';
 
@@ -200,6 +201,17 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     const [inventorySearch, setInventorySearch] = useState('');
     const [techniqueSearch, setTechniqueSearch] = useState('');
     const [equipmentMainSearch, setEquipmentMainSearch] = useState('');
+    const [cartSpaceManager, setCartSpaceManager] = useState<{ 
+        isOpen: boolean; 
+        locationId: string; 
+        locationName: string; 
+        existingItems: any[] 
+    }>({
+        isOpen: false,
+        locationId: '',
+        locationName: '',
+        existingItems: []
+    });
     const [sortConfig, setSortConfig] = useState<{ key: keyof Item; direction: 'asc' | 'desc' }>({ key: 'name', direction: 'asc' });
 
     // Helper to upload base64 images to Supabase Storage
@@ -872,7 +884,14 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
                             rootLocationId={selectedCartId}
                             cartItems={activeCartHook.cartItems}
                             loading={activeCartHook.loading}
-                            onManageMaterials={(locationId, locationName) => alert(`Gestionar materiales para ${locationName} (Próximamente)`)}
+                            onManageMaterials={(locationId, locationName, cartType, existingItems) => {
+                                setCartSpaceManager({ 
+                                    isOpen: true, 
+                                    locationId, 
+                                    locationName, 
+                                    existingItems 
+                                });
+                            }}
                             onManageLocations={() => setActiveTab('LOCATIONS')}
                             onAddSubLocation={() => {
                                 const cart = savedLocations.find(l => l.id === selectedCartId);
@@ -1269,10 +1288,19 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
             </div >
             {/* Redundant modals removed */}
 
-
-
-
-
+            {cartSpaceManager.isOpen && (
+                <CartSpaceManagerModal
+                    locationId={cartSpaceManager.locationId}
+                    locationName={cartSpaceManager.locationName}
+                    existingItems={cartSpaceManager.existingItems}
+                    inventory={inventory}
+                    onClose={() => setCartSpaceManager({ ...cartSpaceManager, isOpen: false })}
+                    onSave={async (lid, items) => {
+                        await activeCartHook.syncCartItems(lid, items);
+                        await globalCartItems.refresh();
+                    }}
+                />
+            )}
         </div >
     );
 };
