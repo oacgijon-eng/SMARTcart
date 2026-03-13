@@ -323,23 +323,14 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                     )}
                   </div>
 
-                  {!isChecked && (
-                    <button
-                      onClick={() => openWarehouseModal(item)}
-                      className="absolute bottom-2 right-2 text-[10px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 px-2 py-1 rounded transition-colors flex items-center gap-1 uppercase border border-amber-200 dark:border-amber-800 shadow-sm"
-                    >
-
-                      <MapPin size={10} /> Falta material
-                    </button>
-                  )}
                 </div>
 
                 {/* Checkbox Column */}
-                <div className={`flex items-center justify-center p-4 border-l border-slate-100 dark:border-slate-700 ${isChecked ? 'bg-green-50/50 dark:bg-green-900/10' : 'bg-slate-50/30 dark:bg-slate-900/20'} md:w-20`}>
+                <div className={`flex flex-col gap-2 items-center justify-center p-2 sm:p-4 border-l border-slate-100 dark:border-slate-700 ${isChecked ? 'bg-green-50/50 dark:bg-green-900/10' : 'bg-slate-50/30 dark:bg-slate-900/20'} min-w-[5rem] sm:min-w-[6rem] md:w-28`}>
                   <button
 
                     onClick={() => toggleItem(toUseItem.id)}
-                    className="group"
+                    className="group shrink-0"
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-sm ${isChecked
                       ? 'bg-green-500 text-white shadow-md scale-110 ring-4 ring-green-100 dark:ring-green-900'
@@ -349,6 +340,16 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                       <Check size={28} className={isChecked ? "stroke-[3]" : "stroke-[2]"} />
                     </div>
                   </button>
+
+                  {!isChecked && (
+                    <button
+                      onClick={() => openWarehouseModal(item)}
+                      className="text-[9px] sm:text-[10px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 px-1.5 py-1 rounded transition-colors flex flex-col xl:flex-row items-center justify-center gap-1 uppercase border border-amber-200 dark:border-amber-800 shadow-sm w-full text-center leading-tight whitespace-normal"
+                    >
+                      <MapPin size={10} className="shrink-0 hidden xl:block" />
+                      <span>Falta material</span>
+                    </button>
+                  )}
                 </div>
               </Card>
             );
