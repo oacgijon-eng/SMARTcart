@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['logo.png', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'SMARTcart',
           short_name: 'SMARTcart',
@@ -23,14 +23,26 @@ export default defineConfig(({ mode }) => {
           background_color: '#121B26',
           icons: [
             {
-              src: 'icon.svg',
+              src: 'logo.png',
               sizes: '192x192',
-              type: 'image/svg+xml'
+              type: 'image/png'
             },
             {
-              src: 'icon.svg',
+              src: 'logo.png',
               sizes: '512x512',
-              type: 'image/svg+xml'
+              type: 'image/png'
+            },
+            {
+              src: 'logo.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable'
+            },
+            {
+              src: 'logo.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
             }
           ]
         }
