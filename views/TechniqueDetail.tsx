@@ -14,9 +14,11 @@ interface TechniqueDetailProps {
   onBack: () => void;
   onStartRestock: () => void;
   unitId?: string;
+  onFlagItem: (itemId: string) => void;
+  flaggedItemIds: Set<string>;
 }
 
-export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inventory, locations, cartContents, onBack, onStartRestock, unitId }) => {
+export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inventory, locations, cartContents, onBack, onStartRestock, unitId, onFlagItem, flaggedItemIds }) => {
   const { createIncident } = useIncidents(unitId);
   // Checklist State
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
@@ -132,6 +134,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
     setSelectedItem(item);
     setIsWarehouseOpen(true);
     setIsSearchOpen(false); // Ensure search is closed if opened from there
+    onFlagItem(item.id); // Mark item as "needed from elsewhere"
   };
 
   return (
@@ -276,8 +279,8 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                 key={idx}
                 className={`group relative flex flex-row p-0 transition-all duration-300 ${isChecked
                   ? 'border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-900 shadow-sm'
-                  : isExternal
-                    ? 'border-alert-200 bg-alert-50 dark:bg-alert-950/20 dark:border-alert-900'
+                  : flaggedItemIds.has(item.id)
+                    ? 'border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800 shadow-sm'
                     : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-clinical-300 dark:hover:border-clinical-500 hover:shadow-md'}`}
               >
                 <div className={`flex-1 p-4 flex flex-col justify-center relative transition-all ${isChecked ? 'bg-green-50/30 dark:bg-green-950/10' : ''}`}>
@@ -341,7 +344,12 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
                     </div>
                   </button>
 
-                  {!isChecked && (
+                  {flaggedItemIds.has(item.id) ? (
+                    <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded flex items-center gap-1">
+                      <Search size={10} />
+                      <span>Buscado fuera</span>
+                    </div>
+                  ) : !isChecked && (
                     <button
                       onClick={() => openWarehouseModal(item)}
                       className="text-[9px] sm:text-[10px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 px-1.5 py-1 rounded transition-colors flex flex-col xl:flex-row items-center justify-center gap-1 uppercase border border-amber-200 dark:border-amber-800 shadow-sm w-full text-center leading-tight whitespace-normal"

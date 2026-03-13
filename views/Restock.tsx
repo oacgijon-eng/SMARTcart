@@ -13,9 +13,10 @@ interface RestockProps {
     cartContents: CartItem[];
     onFinish: () => void;
     unitId?: string;
+    flaggedItemIds?: Set<string>;
 }
 
-export const Restock: React.FC<RestockProps> = ({ technique, inventory, locations, cartContents, onFinish, unitId }) => {
+export const Restock: React.FC<RestockProps> = ({ technique, inventory, locations, cartContents, onFinish, unitId, flaggedItemIds = new Set() }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [rating, setRating] = useState<number | null>(null);
     const [issue, setIssue] = useState('');
@@ -24,21 +25,58 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
     const [extraItems, setExtraItems] = useState<Record<string, number>>({});
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    
+    // 1. Determine which carts are relevant for this technique (same logic as TechniqueDetail)
+    const finalCartIds = React.useMemo(() => {
+        if (technique.cartIds && technique.cartIds.length > 0) return technique.cartIds;
+
+        const derived = new Set<string>();
+        technique.items.forEach(kitItem => {
+            const cartItems = cartContents.filter(ci => ci.itemId === kitItem.itemId);
+            cartItems.forEach(cItem => {
+                const drawer = locations.find(l => l.id === cItem.locationId);
+                if (drawer) {
+                    const cartId = drawer.parent_id || drawer.id;
+                    derived.add(cartId);
+                }
+            });
+        });
+        return Array.from(derived);
+    }, [technique, cartContents, locations]);
 
     const hydratedItems = React.useMemo(() => {
         return (technique.items || []).map(ti => {
             const item = inventory.find(i => i.id === ti.itemId);
             const itemContents = cartContents.filter(cc => cc.itemId === ti.itemId);
 
-            const resolvedLocations = itemContents.map(cc => {
-                const loc = locations.find(l => l.id === cc.locationId);
-                const parent = loc?.parent_id ? locations.find(l => l.id === loc.parent_id) : null;
-                return {
-                    name: parent ? `${parent.name} - ${loc?.name}` : loc?.name || 'General',
-                    color: parent?.color || loc?.color || '#e2e8f0',
-                    stockIdeal: cc.stockIdeal
-                };
-            });
+            const resolvedLocations = itemContents
+                .map(cc => {
+                    const loc = locations.find(l => l.id === cc.locationId);
+                    const parent = loc?.parent_id ? locations.find(l => l.id === loc.parent_id) : null;
+                    const cartId = parent?.id || loc?.id || '';
+                    
+                    return {
+                        id: cc.id,
+                        cartId,
+                        name: parent ? `${parent.name} - ${loc?.name}` : loc?.name || 'General',
+                        color: parent?.color || loc?.color || '#e2e8f0',
+                        stockIdeal: cc.stockIdeal,
+                        type: parent?.type || loc?.type
+                    };
+                })
+                .filter(loc => {
+                    // Show if:
+                    // 1. It belongs to a primary cart
+                    // 2. OR the item was flagged as missing/outside
+                    // 3. OR there are NO primary carts matched at all (fallback)
+                    
+                    const isPrimary = finalCartIds.includes(loc.cartId);
+                    if (isPrimary) return true;
+                    
+                    if (flaggedItemIds.has(ti.itemId)) return true;
+                    
+                    return false;
+                });
 
             const firstLoc = itemContents[0];
             const loc = locations.find(l => l.id === firstLoc?.locationId);
@@ -205,9 +243,17 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
 
                                 <div className="p-4 flex-1">
                                     <div className="flex justify-between items-start">
-                                        <h4 className={`font-bold text-lg ${isChecked ? 'text-slate-500 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
-                                            {item.name}
-                                        </h4>
+                                        <div className="flex flex-col items-start gap-1">
+                                            <h4 className={`font-bold text-lg ${isChecked ? 'text-slate-500 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
+                                                {item.name}
+                                            </h4>
+                                            {flaggedItemIds.has(item.id) && (
+                                                <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-800">
+                                                    <RotateCw size={10} />
+                                                    <span>Necesitó material externo</span>
+                                                </div>
+                                            )}
+                                        </div>
                                         <div className="flex flex-col items-end">
                                             {/* Detailed Stock Breakdown */}
                                             {kitItem.resolvedLocations && kitItem.resolvedLocations.length > 0 ? (

@@ -61,6 +61,7 @@ const AppContent: React.FC = () => {
 
   const [view, setView] = useState<ViewState>('LANDING');
   const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null);
+  const [flaggedItemIds, setFlaggedItemIds] = useState<Set<string>>(new Set());
 
   // Unit State
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(() => {
@@ -106,6 +107,7 @@ const AppContent: React.FC = () => {
   const handleStartRestock = () => setView('RESTOCK');
   const handleFinishRestock = () => {
     setSelectedTechnique(null);
+    setFlaggedItemIds(new Set());
     setView('LANDING');
   };
 
@@ -128,6 +130,7 @@ const AppContent: React.FC = () => {
 
   const handleBackToSelector = () => {
     setSelectedTechnique(null);
+    setFlaggedItemIds(new Set());
     setView('SELECTOR');
   };
 
@@ -280,6 +283,8 @@ const AppContent: React.FC = () => {
                   onBack={handleBackToSelector}
                   onStartRestock={handleStartRestock}
                   unitId={selectedUnitId || undefined}
+                  onFlagItem={(id) => setFlaggedItemIds(prev => new Set(prev).add(id))}
+                  flaggedItemIds={flaggedItemIds}
                 />
               )}
 
@@ -291,6 +296,7 @@ const AppContent: React.FC = () => {
                   cartContents={cartContents}
                   onFinish={handleFinishRestock}
                   unitId={selectedUnitId || undefined}
+                  flaggedItemIds={flaggedItemIds}
                 />
               )}
 
