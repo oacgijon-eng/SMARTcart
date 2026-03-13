@@ -213,7 +213,12 @@ const AppContent: React.FC = () => {
 
       {/* Main Content Render */}
       <div className="w-full">
-        {itemsLoading || techniquesLoading || unitsLoading || locationsLoading || cartLoading ? (
+        {((items.length === 0 && itemsLoading) || 
+           (techniques.length === 0 && techniquesLoading) || 
+           (units.length === 0 && unitsLoading) || 
+           (locations.length === 0 && locationsLoading) || 
+           (cartContents.length === 0 && cartLoading) ||
+           (equipment.length === 0 && equipmentLoading)) ? (
           <div className="min-h-screen bg-slate-50 dark:bg-night-bg flex flex-col p-6 items-center pt-24 space-y-12">
             {/* Header Skeleton */}
             <div className="animate-pulse flex flex-col items-center space-y-4">
@@ -228,7 +233,7 @@ const AppContent: React.FC = () => {
               <div className="h-16 bg-slate-200 dark:bg-slate-800 rounded-xl w-full"></div>
             </div>
           </div>
-        ) : itemsError || techniquesError || locationsError ? (
+        ) : (itemsError || techniquesError || locationsError) ? (
           <div className="min-h-screen bg-white dark:bg-night-bg flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white dark:bg-night-card p-8 rounded-2xl shadow-lg border border-red-100 dark:border-red-900/50 text-center">
               <h2 className="text-xl font-bold text-red-600 mb-2">Error al cargar datos</h2>
