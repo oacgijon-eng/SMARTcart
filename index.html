@@ -67,6 +67,113 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    /* Shifting Gradient Aurora Animations - Viewport Relative & Hardware Accelerated */
+    @keyframes animateBlob1 {
+      0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+      33% { transform: translate(12vw, -8vh) scale(1.15) rotate(120deg); }
+      66% { transform: translate(-8vw, 12vh) scale(0.9) rotate(240deg); }
+      100% { transform: translate(0px, 0px) scale(1) rotate(360deg); }
+    }
+    @keyframes animateBlob2 {
+      0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+      33% { transform: translate(-12vw, 10vh) scale(0.9) rotate(-120deg); }
+      66% { transform: translate(8vw, -8vh) scale(1.15) rotate(-240deg); }
+      100% { transform: translate(0px, 0px) scale(1) rotate(-360deg); }
+    }
+    @keyframes animateBlob3 {
+      0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+      33% { transform: translate(8vw, 8vh) scale(0.95) rotate(90deg); }
+      66% { transform: translate(-10vw, -10vh) scale(1.1) rotate(180deg); }
+      100% { transform: translate(0px, 0px) scale(1) rotate(270deg); }
+    }
+
+    .animate-blob-1 {
+      animation: animateBlob1 35s infinite ease-in-out;
+      will-change: transform;
+    }
+    .animate-blob-2 {
+      animation: animateBlob2 40s infinite ease-in-out;
+      will-change: transform;
+    }
+    .animate-blob-3 {
+      animation: animateBlob3 37s infinite ease-in-out;
+      will-change: transform;
+    }
+
+    /* Medical Liquid Wave Animations */
+    @keyframes waveMove {
+      0% { transform: translateX(0) translateZ(0) scaleY(1); }
+      50% { transform: translateX(-25%) translateZ(0) scaleY(0.85); }
+      100% { transform: translateX(0) translateZ(0) scaleY(1); }
+    }
+    
+    .animate-wave-slow {
+      animation: waveMove 28s ease-in-out infinite;
+      will-change: transform;
+    }
+    
+    .animate-wave-fast {
+      animation: waveMove 18s ease-in-out infinite;
+      will-change: transform;
+    }
+
+    /* Premium Frosted Glassmorphism Cards */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .dark .glass-card {
+      background: rgba(28, 42, 57, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Glow details - Only hover on mouse devices to prevent sticky hover states on tablets */
+    .glow-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @media (hover: hover) {
+      .glow-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 20px -8px rgba(26, 188, 156, 0.3);
+      }
+    }
+    .glow-hover:active {
+      transform: scale(0.97);
+    }
+
+    /* Global Tablet & Touch Device Optimizations */
+    button, .glass-card, [role="button"], input[type="submit"], select, .cursor-pointer {
+      -webkit-tap-highlight-color: transparent !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      touch-action: manipulation !important;
+    }
+
+    /* Subtle medical tech dot pattern - Seamless Dynamic Drift */
+    @keyframes driftGrid {
+      from { background-position: 0px 0px; }
+      to { background-position: 24px 24px; }
+    }
+
+    .bg-grid-pattern {
+      background-size: 24px 24px;
+      background-image: radial-gradient(circle, rgba(26, 188, 156, 0.18) 1.2px, transparent 1.2px);
+      animation: driftGrid 40s linear infinite;
+      will-change: background-position;
+    }
+    
+    .dark .bg-grid-pattern {
+      background-size: 24px 24px;
+      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1.2px, transparent 1.2px);
+      animation: driftGrid 40s linear infinite;
+      will-change: background-position;
+    }
   </style>
   <script type="importmap">
 {
@@ -81,7 +188,7 @@
   <link rel="stylesheet" href="/index.css">
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-50 antialiased">
+<body class="bg-white dark:bg-night-bg text-deep-blue dark:text-slate-200 transition-colors duration-300 antialiased">
 
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>

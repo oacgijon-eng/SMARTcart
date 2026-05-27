@@ -18,7 +18,7 @@ export const Landing: React.FC<LandingProps> = ({ onNurseStart, onAdminStart, on
   const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-night-bg flex flex-col p-6 relative transition-colors duration-300 overflow-x-hidden">
+    <div className="min-h-screen bg-transparent flex flex-col p-6 relative transition-colors duration-300 overflow-x-hidden">
 
       {/* Top Bar Actions */}
       <div className="absolute top-6 left-6 right-6 flex justify-between items-start pt-[env(safe-area-inset-top)] z-20">

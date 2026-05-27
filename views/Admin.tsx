@@ -77,7 +77,7 @@ export const AdminLogin: React.FC<{
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-night-bg flex items-center justify-center p-4 transition-colors pt-[calc(1rem+env(safe-area-inset-top))]">
+        <div className="min-h-screen bg-transparent flex items-center justify-center p-4 transition-colors pt-[calc(1rem+env(safe-area-inset-top))]">
             <Card className="w-full max-w-sm sm:max-w-md p-6 sm:p-8 space-y-6 dark:bg-night-card dark:border-slate-700">
                 <div className="text-center">
                     <div className="flex justify-center mb-4">
@@ -616,8 +616,8 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors overflow-x-hidden">
-            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2 sm:py-4 flex justify-between items-center sticky top-0 z-40 pt-[calc(0.5rem+env(safe-area-inset-top))]">
+        <div className="min-h-screen bg-transparent flex flex-col transition-colors overflow-x-hidden">
+            <div className="bg-light-gray-blue dark:bg-night-card border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2 sm:py-4 flex justify-between items-center sticky top-0 z-40 pt-[calc(0.5rem+env(safe-area-inset-top))]">
                 <div className="flex items-center gap-2 sm:gap-3">
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -663,7 +663,7 @@ export const AdminDashboard: React.FC<AdminProps> = (props) => {
 
                 {/* Sidebar / Tabs */}
                 <div className={`
-                    fixed md:relative inset-y-0 left-0 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'} w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
+                    fixed md:relative inset-y-0 left-0 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-64'} w-72 bg-light-gray-blue dark:bg-night-card border-r border-slate-200 dark:border-slate-800 
                     flex flex-col z-50 transform transition-all duration-300 ease-in-out
                     ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
                     md:translate-x-0 md:static shrink-0

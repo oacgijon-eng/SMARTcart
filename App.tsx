@@ -16,6 +16,7 @@ const AdminLogin = React.lazy(() => import('./views/Admin').then(m => ({ default
 const AdminDashboard = React.lazy(() => import('./views/Admin').then(m => ({ default: m.AdminDashboard })));
 import { useProfile } from './hooks/useProfile';
 import { useUnits } from './hooks/useUnits';
+import { ClinicalChatbot } from './components/ClinicalChatbot';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -212,10 +213,51 @@ const AppContent: React.FC = () => {
 
   // Render Logic
   return (
-    <div className="font-sans antialiased text-deep-blue bg-white dark:bg-night-bg dark:text-slate-100 min-h-screen">
+    <div className="font-sans antialiased text-deep-blue bg-white dark:bg-night-bg dark:text-slate-100 min-h-screen relative overflow-x-hidden transition-colors duration-300">
+
+      {/* Background Shifting Gradient Mesh (Aurora Effect) and Dynamic Waves */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 transition-opacity duration-500 select-none">
+        {/* Subtle Tech Radial Dot Grid Overlay */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-100 dark:opacity-80"></div>
+        
+        {/* Soft Shifting Gradient Ambient Blobs */}
+        <div className="absolute inset-0 opacity-80 dark:opacity-45 transition-opacity duration-300">
+          <div className="absolute top-[-5%] left-[-10%] w-[55vw] h-[55vw] max-w-[450px] max-h-[450px] rounded-full bg-teal-200 dark:bg-teal-500/25 blur-[70px] md:blur-[90px] animate-blob-1 opacity-90"></div>
+          <div className="absolute bottom-[-5%] right-[-10%] w-[60vw] h-[60vw] max-w-[500px] max-h-[500px] rounded-full bg-sky-200 dark:bg-sky-400/20 blur-[80px] md:blur-[100px] animate-blob-2 opacity-85"></div>
+          <div className="absolute top-[35%] right-[15%] w-[40vw] h-[40vw] max-w-[350px] max-h-[350px] rounded-full bg-emerald-100 dark:bg-emerald-500/20 blur-[75px] md:blur-[90px] animate-blob-3 opacity-90"></div>
+        </div>
+
+        {/* Dynamic Medical Liquid Waves at the bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-[30vh] opacity-35 dark:opacity-20 z-0">
+          <svg className="absolute w-[200vw] h-full animate-wave-slow bottom-0" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ left: 0 }}>
+            <path 
+              fill="url(#wave-teal)" 
+              d="M0,160 C280,240 480,80 720,160 C960,240 1160,80 1440,160 L1440,320 L0,320 Z"
+            ></path>
+            <defs>
+              <linearGradient id="wave-teal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#1ABC9C" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#0f766e" stopOpacity="0.05" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <svg className="absolute w-[200vw] h-full animate-wave-fast bottom-0 opacity-75" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ left: '-50vw' }}>
+            <path 
+              fill="url(#wave-sky)" 
+              d="M0,224 C280,128 480,320 720,224 C960,128 1160,320 1440,224 L1440,320 L0,320 Z"
+            ></path>
+            <defs>
+              <linearGradient id="wave-sky" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.05" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
 
       {/* Main Content Render */}
-      <div className="w-full">
+      <div className="w-full relative z-10">
         {((items.length === 0 && itemsLoading) || 
            (techniques.length === 0 && techniquesLoading) || 
            (units.length === 0 && unitsLoading) || 
@@ -389,6 +431,14 @@ const AppContent: React.FC = () => {
                 </>
               )}
             </React.Suspense>
+            {view !== 'ADMIN_LOGIN' && view !== 'ADMIN_DASHBOARD' && (
+              <ClinicalChatbot
+                items={items}
+                techniques={techniques}
+                locations={locations}
+                cartContents={cartContents}
+              />
+            )}
           </>
         )}
       </div>

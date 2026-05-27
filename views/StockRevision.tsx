@@ -211,7 +211,7 @@ export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations,
         : [];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+        <div className="min-h-screen bg-transparent flex flex-col">
             {/* Header */}
             <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 px-4 py-4 flex items-center gap-4 shadow-sm">
                 <button
@@ -287,7 +287,7 @@ export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations,
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="bg-light-gray-blue dark:bg-night-card rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                             {/* Filter Buttons */}
                             {groupsList.length > 0 && (
                                 <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 overflow-x-auto">
@@ -333,11 +333,11 @@ export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations,
                                                 const itemId = `${activeSubLocationId}-${item.text}`; // unique key for checkbox
                                                 const isChecked = checkedItems.has(itemId);
                                                 return (
-                                                    <tr
-                                                        key={idx}
-                                                        className={`transition-colors cursor-pointer ${isChecked ? 'bg-slate-50/50 dark:bg-slate-700/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                                                        onClick={() => toggleCheck(itemId)}
-                                                    >
+                                                     <tr
+                                                         key={idx}
+                                                         className={`transition-all duration-200 cursor-pointer select-none active:bg-slate-100/50 dark:active:bg-slate-700/30 ${isChecked ? 'bg-slate-50/50 dark:bg-slate-700/20' : ''}`}
+                                                         onClick={() => toggleCheck(itemId)}
+                                                     >
                                                         <td className="px-4 py-3">
                                                             <div className={`w-6 h-6 rounded border flex items-center justify-center transition-all ${isChecked ? 'bg-clinical-600 border-clinical-600 shadow-sm' : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 group-hover:border-clinical-400'}`}>
                                                                 {isChecked && <Check size={16} className="text-white" />}
@@ -403,7 +403,7 @@ export const StockRevision: React.FC<StockRevisionProps> = ({ onBack, locations,
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                        <div className="bg-light-gray-blue dark:bg-night-card p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
                             <h3 className="font-semibold text-slate-900 dark:text-white">Finalizar Revisión</h3>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tu Nombre</label>

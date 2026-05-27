@@ -138,7 +138,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
 
       <PageHeader
         title={technique.name}
@@ -173,7 +173,7 @@ export const TechniqueDetail: React.FC<TechniqueDetailProps> = ({ technique, inv
         {technique.description && (
           <div className="mb-8">
             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Descripción</h3>
-            <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed bg-light-gray-blue dark:bg-night-card p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
               {technique.description}
             </p>
 

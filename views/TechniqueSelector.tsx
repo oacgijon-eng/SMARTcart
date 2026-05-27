@@ -20,7 +20,7 @@ export const TechniqueSelector: React.FC<TechniqueSelectorProps> = ({ techniques
 
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-6">
+    <div className="min-h-screen bg-transparent pb-6">
 
       <PageHeader
         title="Selector de Técnicas"

@@ -192,7 +192,7 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+        <div className="min-h-screen bg-transparent flex flex-col">
             <PageHeader
 
                 title="Reposición"
@@ -230,10 +230,10 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                                 key={uniqueId}
                                 onClick={() => toggleCheck(uniqueId)}
                                 className={`
-                            relative overflow-hidden rounded-xl border-2 transition-all cursor-pointer flex flex-col md:flex-row
+                            relative overflow-hidden rounded-xl border-2 transition-all duration-300 cursor-pointer flex flex-col md:flex-row active:scale-[0.98] select-none touch-manipulation
                             ${isChecked
-                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600 opacity-60'
-                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-clinical-400 dark:hover:border-clinical-500 shadow-sm'}
+                                        ? 'bg-green-50/50 dark:bg-green-900/10 border-green-500 dark:border-green-600 opacity-60'
+                                        : 'glass-card border-slate-200 dark:border-slate-700 shadow-sm'}
                         `}
                             >
                                 <div className={`w-12 flex items-center justify-center shrink-0 ${isChecked ? 'bg-green-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-300 dark:text-slate-500'}`}>
@@ -446,7 +446,7 @@ export const Restock: React.FC<RestockProps> = ({ technique, inventory, location
                         Feedback Rápido
                     </h3>
 
-                    <Card className="p-6 space-y-8 bg-white dark:bg-slate-800">
+                    <Card className="p-6 space-y-8 bg-light-gray-blue dark:bg-night-card">
                         {/* 1. Faces Rating */}
                         <div>
                             <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 text-center uppercase tracking-wide">Valoración de la experiencia</label>
